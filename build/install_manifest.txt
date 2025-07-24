@@ -1,0 +1,3 @@
+/usr/local/lib/libtraffic_signal_reco_core.so
+/usr/local/include/traffic_signal_reco.hpp
+/usr/local/bin/traffic_signal_reco_test
