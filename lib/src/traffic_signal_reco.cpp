@@ -6,9 +6,9 @@ namespace signal_reco {
 SignalReco::SignalReco()
 {
   // initImgPcdName("../cfg/file_img_pcd_name.ini");
-  initImgPcdName("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/file_img_pcd_name.ini");
+  // initImgPcdName("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/file_img_pcd_name.ini");
   // initParam("../cfg/parameter.ini");
-  initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
+  initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
 }
 /*** デストラクタ ***/
 SignalReco::~SignalReco()
@@ -86,6 +86,7 @@ void SignalReco::initParam(const string &path)
   MIN_ASPECT_RATIO = pt.get<double>("MIN_ASPECT_RATIO");
   MAX_ASPECT_RATIO = pt.get<double>("MAX_ASPECT_RATIO");
   YELLOW_PIX_TH = pt.get<int>("YELLOW_PIX_TH");
+
 }
 
 /* ファイル名を取得 */
@@ -633,6 +634,7 @@ void SignalReco::loop_main()
     return;
   }
   /*** カメラキャリブレーションパラメータを取得 ***/
+  cam_yaml_path = "/home/revast/workspace/ryusei/traffic_signal_reco_lib/parameter/streamcam.yaml";
   FileStorage fs(cam_yaml_path, FileStorage::READ);
   if(!fs.isOpened()) {
     cerr << "Failed to open camera YAML file: " << cam_yaml_path << endl;

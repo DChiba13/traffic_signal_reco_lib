@@ -44,9 +44,15 @@ double PITCH;
 double YAW;
 
 /*** 赤Mercury  3D-lidar : pandar_xt_32 ***/
+// double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
+// double LIDAR_VIEW_ANGLE_V = Deg2Rad(32.0); // 障害物を探索する垂直画角
+// double LIDAR_RESOLUTION_H = Deg2Rad(0.36); // LiDARの水平解像度(分解能)
+// double LIDAR_RESOLUTION_V = Deg2Rad(1.0); // LiDARの垂直解像度(分解能)
+
+/*** 青Mercury  3D-lidar : pandar40 ***/
 double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
-double LIDAR_VIEW_ANGLE_V = Deg2Rad(32.0); // 障害物を探索する垂直画角
-double LIDAR_RESOLUTION_H = Deg2Rad(0.36); // LiDARの水平解像度(分解能)
+double LIDAR_VIEW_ANGLE_V = Deg2Rad(40.0); // 障害物を探索する垂直画角
+double LIDAR_RESOLUTION_H = Deg2Rad(0.33); // LiDARの水平解像度(分解能)
 double LIDAR_RESOLUTION_V = Deg2Rad(1.0); // LiDARの垂直解像度(分解能)
 
 /*** LiDAR画像に関するパラメータ ***/
