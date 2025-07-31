@@ -651,9 +651,9 @@ void SignalReco::loop_main()
   rotatePoints(src_points, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), points);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
   projectToImage(points, lidar_img, true); // 反射強度画像、距離画像の作成
-  // projectToImage(points, lidar_img_fov, false); // 反射強度画像、距離画像の作成（画像確認用）
+  projectToImage(points, lidar_img_fov, false); // 反射強度画像、距離画像の作成（画像確認用）
   drawObjectsReflect(lidar_img, lidar_img_ref); // 反射強度画像の描画
-  // drawObjectsReflect(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
+  drawObjectsReflect(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
   drawObjectsRange(lidar_img, lidar_img_range); // 距離画像の描画
   // drawObjectsRange(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  // 反射強度画像の矩形領域を検出
