@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/revast/workspace/ryusei/traffic_signal_reco_lib/lib/include -I/home/revast/workspace/ryusei/traffic_signal_reco_lib/test/../lib/include -isystem /usr/include/opencv4
+CXX_INCLUDES = -I/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/lib/include -I/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/test/../lib/include -isystem /usr/include/opencv4
 
 CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

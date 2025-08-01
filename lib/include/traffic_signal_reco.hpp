@@ -44,16 +44,16 @@ double PITCH;
 double YAW;
 
 /*** 赤Mercury  3D-lidar : pandar_xt_32 ***/
-// double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
-// double LIDAR_VIEW_ANGLE_V = Deg2Rad(32.0); // 障害物を探索する垂直画角
-// double LIDAR_RESOLUTION_H = Deg2Rad(0.36); // LiDARの水平解像度(分解能)
-// double LIDAR_RESOLUTION_V = Deg2Rad(1.0); // LiDARの垂直解像度(分解能)
+double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
+double LIDAR_VIEW_ANGLE_V = Deg2Rad(32.0); // 障害物を探索する垂直画角
+double LIDAR_RESOLUTION_H = Deg2Rad(0.36); // LiDARの水平解像度(分解能)
+double LIDAR_RESOLUTION_V = Deg2Rad(1.0); // LiDARの垂直解像度(分解能)
 
 /*** 青Mercury  3D-lidar : pandar40 ***/
-double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
-double LIDAR_VIEW_ANGLE_V = Deg2Rad(40.0); // 障害物を探索する垂直画角
-double LIDAR_RESOLUTION_H = Deg2Rad(0.33); // LiDARの水平解像度(分解能)
-double LIDAR_RESOLUTION_V = Deg2Rad(1.0); // LiDARの垂直解像度(分解能)
+// double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
+// double LIDAR_VIEW_ANGLE_V = Deg2Rad(40.0); // 障害物を探索する垂直画角
+// double LIDAR_RESOLUTION_H = Deg2Rad(0.33); // LiDARの水平解像度(分解能)
+// double LIDAR_RESOLUTION_V = Deg2Rad(1.0); // LiDARの垂直解像度(分解能)
 
 /*** LiDAR画像に関するパラメータ ***/
 double DETECT_HEIGHT_MIN; // 障害物の高さ(最小)
@@ -120,7 +120,9 @@ public:
     void rotatePoints(const vector<LidarData> &src, float roll, float pitch, float yaw, vector<LidarData> &dst);
     void projectToImage(const vector<LidarData> &points, cv::Mat &lidar_img, bool is_for_reco = false);
     void drawObjectsReflect(const Mat &lidar_data, Mat &img);
+    void drawObjectsReflectForView(const Mat &lidar_data, Mat &img);
     void drawObjectsRange(const Mat &lidar_data, Mat &img);
+    void drawObjectsRangeForView(const Mat &lidar_data, Mat &img);
     void rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_bin, vector<vector<cv::Point2i>> &sign_rects);
     void screen2CenteredCoords(cv::Size image_size, const vector<vector<cv::Point2i>> &sign_rect_refimg_screen, vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen);
     void centeredScreen2RobotCoords(const Mat &lidar_img, const vector<vector<cv::Point2i>> &sign_rects_refimg_screen, const vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen, vector<vector<cv::Point3f>> &sign_rect_points_robot);
