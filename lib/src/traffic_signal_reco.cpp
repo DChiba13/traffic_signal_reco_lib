@@ -6,9 +6,11 @@ namespace signal_reco {
 SignalReco::SignalReco()
 {
   // initImgPcdName("../cfg/file_img_pcd_name.ini");
+  initImgPcdName("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/file_img_pcd_name.ini");
   // initImgPcdName("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/file_img_pcd_name.ini");
   // initParam("../cfg/parameter.ini");
-  initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
+  initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
+  // initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
 }
 /*** デストラクタ ***/
 SignalReco::~SignalReco()
@@ -203,6 +205,25 @@ void SignalReco::drawObjectsReflect(const Mat &lidar_data, Mat &img)
   }
 }
 
+void SignalReco::drawObjectsReflectForView(const Mat &lidar_data, Mat &img)
+{
+  auto remap = [](float val, float from_low, float from_high, float to_low, float to_high)
+  {
+    return (val - from_low) * (to_high - to_low) / (from_high - from_low) + to_low;
+  };
+  auto &lidar_img = lidar_data;
+  if(img.cols != lidar_img.cols || img.rows != lidar_img.rows) img = Mat(lidar_img.size(),CV_8UC3, Scalar(.0, .0, .0));
+  else img = Scalar(.0, .0, .0);
+  for(int y = 0; y < img.rows; y++){
+    for(int x = 0; x < img.cols; x++){
+      float reflect = lidar_img.at<Vec2f>(y, x)[0];
+      float range = lidar_img.at<Vec2f>(y, x)[1];
+      int val = (int)remap(reflect, 0.0f, (float)MAX_REFLECT, 30.0f, 255.0f);
+      img.at<Vec3b>(y, x) = Vec3b(val, val, val);
+    }
+  }
+}
+
 void SignalReco::drawObjectsRange(const Mat &lidar_data, Mat &img)
 {
   auto remap = [](float val, float from_low, float from_high, float to_low, float to_high)
@@ -216,6 +237,24 @@ void SignalReco::drawObjectsRange(const Mat &lidar_data, Mat &img)
     for(int x = 0; x < img.cols; x++){
       float range = lidar_img.at<Vec2f>(y, x)[1];
       if(range > MAX_RANGE || range <= MIN_RANGE) continue;
+      int val = (int)remap(range, (float)MAX_RANGE, 0.0f, 30.0f, 255.0f);
+      img.at<Vec3b>(y, x) = Vec3b(val, val, val);
+    }
+  }
+}
+
+void SignalReco::drawObjectsRangeForView(const Mat &lidar_data, Mat &img)
+{
+  auto remap = [](float val, float from_low, float from_high, float to_low, float to_high)
+  {
+    return (val - from_low) * (to_high - to_low) / (from_high - from_low) + to_low;
+  };
+  auto &lidar_img = lidar_data;
+  if(img.cols != lidar_img.cols || img.rows != lidar_img.rows) img = Mat(lidar_img.size(), CV_8UC3, Scalar(.0, .0, .0));
+  else img = Scalar(.0, .0, .0);
+  for(int y = 0; y < img.rows; y++){
+    for(int x = 0; x < img.cols; x++){
+      float range = lidar_img.at<Vec2f>(y, x)[1];
       int val = (int)remap(range, (float)MAX_RANGE, 0.0f, 30.0f, 255.0f);
       img.at<Vec3b>(y, x) = Vec3b(val, val, val);
     }
@@ -634,7 +673,8 @@ void SignalReco::loop_main()
     return;
   }
   /*** カメラキャリブレーションパラメータを取得 ***/
-  cam_yaml_path = "/home/revast/workspace/ryusei/traffic_signal_reco_lib/parameter/streamcam.yaml";
+  // cam_yaml_path = "/home/revast/workspace/ryusei/traffic_signal_reco_lib/parameter/streamcam.yaml";
+  cam_yaml_path = "/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/parameter/streamcam.yaml";
   FileStorage fs(cam_yaml_path, FileStorage::READ);
   if(!fs.isOpened()) {
     cerr << "Failed to open camera YAML file: " << cam_yaml_path << endl;
@@ -653,9 +693,9 @@ void SignalReco::loop_main()
   projectToImage(points, lidar_img, true); // 反射強度画像、距離画像の作成
   projectToImage(points, lidar_img_fov, false); // 反射強度画像、距離画像の作成（画像確認用）
   drawObjectsReflect(lidar_img, lidar_img_ref); // 反射強度画像の描画
-  drawObjectsReflect(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
+  // drawObjectsReflect(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
   drawObjectsRange(lidar_img, lidar_img_range); // 距離画像の描画
-  drawObjectsRange(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
+  // drawObjectsRange(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  // 反射強度画像の矩形領域を検出
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); // 矩形領域の座標系を正規スクリーン座標系に変換
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, sign_rect_points_robot); // 正規スクリーン座標系をカメラ座標系に変換
