@@ -5,12 +5,8 @@ namespace signal_reco {
 /*** コンストラクタ ***/
 SignalReco::SignalReco()
 {
-  // initImgPcdName("../cfg/file_img_pcd_name.ini");
-  initImgPcdName("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/file_img_pcd_name.ini");
-  // initImgPcdName("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/file_img_pcd_name.ini");
-  // initParam("../cfg/parameter.ini");
   initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
-  // initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
+  initImgPcdName(IMG_PCD_PATH);
 }
 /*** デストラクタ ***/
 SignalReco::~SignalReco()
@@ -19,6 +15,7 @@ SignalReco::~SignalReco()
 
 void SignalReco::initImgPcdName(const string &path)
 {
+  cout << "initImgPcdName : " << path << endl;
   std::ifstream ifs(path);
   if(!ifs.is_open()) {
     std::cerr << "Failed to open file_img_pcd_name.ini" << std::endl;
@@ -44,6 +41,20 @@ void SignalReco::initParam(const string &path)
 {
   prop::ptree pt;
   prop::ini_parser::read_ini(path, pt);
+  IMG_PCD_PATH = pt.get<string>("IMG_PCD_PATH");
+  CAM_YAML_PATH = pt.get<string>("CAM_YAML_PATH");
+  LIDAR_VIEW_ANGLE_H = pt.get<double>("LIDAR_VIEW_ANGLE_H");
+  LIDAR_VIEW_ANGLE_V = pt.get<double>("LIDAR_VIEW_ANGLE_V");
+  LIDAR_RESOLUTION_H = pt.get<double>("LIDAR_RESOLUTION_H");
+  LIDAR_RESOLUTION_V = pt.get<double>("LIDAR_RESOLUTION_V");
+  LIDAR_VIEW_ANGLE_H = Deg2Rad(LIDAR_VIEW_ANGLE_H);
+  LIDAR_VIEW_ANGLE_V = Deg2Rad(LIDAR_VIEW_ANGLE_V);
+  LIDAR_RESOLUTION_H = Deg2Rad(LIDAR_RESOLUTION_H);
+  LIDAR_RESOLUTION_V = Deg2Rad(LIDAR_RESOLUTION_V);
+  cout << "LIDAR_VIEW_ANGLE_H : " << LIDAR_VIEW_ANGLE_H << endl;
+  cout << "LIDAR_VIEW_ANGLE_V : " << LIDAR_VIEW_ANGLE_V << endl;
+  cout << "LIDAR_RESOLUTION_H : " << LIDAR_RESOLUTION_H << endl;
+  cout << "LIDAR_RESOLUTION_V : " << LIDAR_RESOLUTION_V << endl;
   X_DIFF = pt.get<double>("X_DIFF");
   Y_DIFF = pt.get<double>("Y_DIFF");
   Z_DIFF = pt.get<double>("Z_DIFF");
@@ -673,11 +684,9 @@ void SignalReco::loop_main()
     return;
   }
   /*** カメラキャリブレーションパラメータを取得 ***/
-  // cam_yaml_path = "/home/revast/workspace/ryusei/traffic_signal_reco_lib/parameter/streamcam.yaml";
-  cam_yaml_path = "/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/parameter/streamcam.yaml";
-  FileStorage fs(cam_yaml_path, FileStorage::READ);
+  FileStorage fs(CAM_YAML_PATH, FileStorage::READ);
   if(!fs.isOpened()) {
-    cerr << "Failed to open camera YAML file: " << cam_yaml_path << endl;
+    cerr << "Failed to open camera YAML file: " << CAM_YAML_PATH << endl;
   }
   Size sz((int)fs["image_width"], (int)fs["image_height"]);
   auto model = (string)fs["distortion_model"];

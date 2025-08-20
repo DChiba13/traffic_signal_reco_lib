@@ -43,6 +43,11 @@ double ROLL;
 double PITCH;
 double YAW;
 
+/*** file_img_pcd_name.iniのパス ***/
+string IMG_PCD_PATH;
+/*** streamcam.yamlのパス ***/
+string CAM_YAML_PATH;
+
 /*** 赤Mercury  3D-lidar : pandar_xt_32 ***/
 double LIDAR_VIEW_ANGLE_H = Deg2Rad(140.0); // 障害物を探索する水平画角 /* 140 ~ 360° */
 double LIDAR_VIEW_ANGLE_V = Deg2Rad(32.0); // 障害物を探索する垂直画角
