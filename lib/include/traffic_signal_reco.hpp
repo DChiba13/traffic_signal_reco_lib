@@ -124,6 +124,7 @@ public:
     void euler2Quaternion(float roll, float pitch, float yaw, float &q_w, float &q_x, float &q_y, float &q_z);
     void rotatePoints(const vector<LidarData> &src, float roll, float pitch, float yaw, vector<LidarData> &dst);
     void projectToImage(const vector<LidarData> &points, cv::Mat &lidar_img, bool is_for_reco = false);
+    void projectToImageForView(const vector<LidarData> &points, Mat &lidar_img);
     void drawObjectsReflect(const Mat &lidar_data, Mat &img);
     void drawObjectsReflectForView(const Mat &lidar_data, Mat &img);
     void drawObjectsRange(const Mat &lidar_data, Mat &img);
