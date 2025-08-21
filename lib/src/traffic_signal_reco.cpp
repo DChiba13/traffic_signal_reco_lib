@@ -194,6 +194,31 @@ void SignalReco::projectToImage(const vector<LidarData> &points, Mat &lidar_img,
   }
 }
 
+void SignalReco::projectToImageForView(const vector<LidarData> &points, Mat &lidar_img)
+{
+  /*** 視野角を解像度で割ると幅と高さのピクセル数が求まる ***/
+  int width = cvRound(LIDAR_VIEW_ANGLE_H / LIDAR_RESOLUTION_H);
+  int height = cvRound(LIDAR_VIEW_ANGLE_V / LIDAR_RESOLUTION_V);
+  lidar_img = Mat(height, width, CV_32FC2, Scalar(.0, .0));
+  
+  /*** points[i]の水平角度と垂直角度を求める ***/
+  int sz = points.size();
+  for(int i = 0; i < sz; i++)
+  {
+    if(points[i].z < 0.3) continue;
+    double angle_h = atan2(points[i].y, points[i].x); 
+    double angle_v = atan2(points[i].z - LIDAR_HEIGHT, sqrt(points[i].x * points[i].x + points[i].y * points[i].y));
+    /*** 求めた角度が画像のどこの画素に対応するか求める ***/
+    int x = cvRound(width / 2 - angle_h / LIDAR_RESOLUTION_H);
+    int y = cvRound(height / 2 - angle_v / LIDAR_RESOLUTION_V);
+
+    if(x < 0 || y < 0 || x >= width || y >= height) continue;
+    lidar_img.at<Vec2f>(y, x) = Vec2f(points[i].reflectivity, points[i].range);
+  }
+  height = cvRound(Deg2Rad(height) / LIDAR_RESOLUTION_H);
+  resize(lidar_img, lidar_img, Size(width, height), 0, 0, INTER_NEAREST);
+}
+
 void SignalReco::drawObjectsReflect(const Mat &lidar_data, Mat &img)
 {
   auto remap = [](float val, float from_low, float from_high, float to_low, float to_high)
@@ -248,7 +273,7 @@ void SignalReco::drawObjectsRange(const Mat &lidar_data, Mat &img)
     for(int x = 0; x < img.cols; x++){
       float range = lidar_img.at<Vec2f>(y, x)[1];
       if(range > MAX_RANGE || range <= MIN_RANGE) continue;
-      int val = (int)remap(range, (float)MAX_RANGE, 0.0f, 30.0f, 255.0f);
+      int val = (int)remap(range, 0.0f, (float)MAX_RANGE, 30.0f, 255.0f);
       img.at<Vec3b>(y, x) = Vec3b(val, val, val);
     }
   }
@@ -266,7 +291,7 @@ void SignalReco::drawObjectsRangeForView(const Mat &lidar_data, Mat &img)
   for(int y = 0; y < img.rows; y++){
     for(int x = 0; x < img.cols; x++){
       float range = lidar_img.at<Vec2f>(y, x)[1];
-      int val = (int)remap(range, (float)MAX_RANGE, 0.0f, 30.0f, 255.0f);
+      int val = (int)remap(range, 0.0f, (float)MAX_RANGE, 30.0f, 255.0f);
       img.at<Vec3b>(y, x) = Vec3b(val, val, val);
     }
   }
@@ -700,11 +725,12 @@ void SignalReco::loop_main()
   rotatePoints(src_points, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), points);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
   projectToImage(points, lidar_img, true); // 反射強度画像、距離画像の作成
-  projectToImage(points, lidar_img_fov, false); // 反射強度画像、距離画像の作成（画像確認用）
+  // projectToImage(points, lidar_img_fov, false); // 反射強度画像、距離画像の作成（画像確認用）
+  projectToImageForView(points, lidar_img_fov); // 反射強度画像、距離画像の作成（画像確認用）
   drawObjectsReflect(lidar_img, lidar_img_ref); // 反射強度画像の描画
-  // drawObjectsReflect(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
+  drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
   drawObjectsRange(lidar_img, lidar_img_range); // 距離画像の描画
-  // drawObjectsRange(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
+  drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  // 反射強度画像の矩形領域を検出
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); // 矩形領域の座標系を正規スクリーン座標系に変換
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, sign_rect_points_robot); // 正規スクリーン座標系をカメラ座標系に変換
