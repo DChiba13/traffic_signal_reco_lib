@@ -1,4 +1,6 @@
 #include "traffic_signal_reco.hpp"
+#include <chrono>
+#include <fstream>
 /*** Global variable ***/
 static signal_reco::SignalReco signal;
 using namespace signal_reco;
@@ -7,8 +9,15 @@ int main() {
   signal.getFiles(signal.img_path, ".png", signal.files_png);
   signal.getFiles(signal.pcd_path, ".pcd", signal.files_pcd);
 
+  // CSV出力用のファイルを開く
+  std::ofstream csv_file("/home/revast/loop_time.csv");
+  csv_file << "loop_index,time_ms\n";  // ヘッダー行
+
+  int loop_index = 0;
+
   while(1) 
   {
+    auto start = std::chrono::high_resolution_clock::now();  // 開始時間
     cout << "Camera file : " << signal.files_png[signal.file_cnt].string() << endl;
     /*** カメラ画像の読み込み ***/
     signal.src_camera_img = imread(signal.files_png[signal.file_cnt].string(), 1);
@@ -17,36 +26,41 @@ int main() {
     signal.loop_main();
     imshow("Window Main", signal.camera_img);
     // imshow("LiDAR Reflect Image", signal.lidar_img_ref);
-    imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
-    imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
+    // imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
+    // imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
     // imshow("LIDAR Reflect Img Bin", signal.lidar_img_ref_bin);
     // imshow("LiDAR Range Image", signal.lidar_img_range);
     // signal_imgs, signal_img_extract_red, greenの画像表示
-    for (int i = 0; i < signal.signal_imgs.size(); i++) {
-      imshow("Signal Image " + to_string(i), signal.signal_imgs[i]);
-      imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
-      imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
-      // imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
-      // imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
-      // imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
-      // imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
-    }
+    // for (int i = 0; i < signal.signal_imgs.size(); i++) {
+    //   imshow("Signal Image " + to_string(i), signal.signal_imgs[i]);
+    //   imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
+    //   imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
+    //   // imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
+    //   // imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
+    //   // imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
+    //   // imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
+    // }
     // imgs_ex_yellowの画像表示
-    for (int i = 0; i < signal.imgs_red_ex_yellow.size(); i++) {
-      for (int j = 0; j < signal.imgs_red_ex_yellow[i].size(); j++) {
-        for(int k = 0; k < signal.imgs_red_ex_yellow[i][j].size(); k++) {
-          imshow("RYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_red_ex_yellow[i][j][k]);
-        }
-      }
-    }
-    for (int i = 0; i < signal.imgs_green_ex_yellow.size(); i++) {
-      for (int j = 0; j < signal.imgs_green_ex_yellow[i].size(); j++) {
-        for(int k = 0; k < signal.imgs_green_ex_yellow[i][j].size(); k++) {
-          imshow("GYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_green_ex_yellow[i][j][k]);
-        }
-      }
-    }
+    // for (int i = 0; i < signal.imgs_red_ex_yellow.size(); i++) {
+    //   for (int j = 0; j < signal.imgs_red_ex_yellow[i].size(); j++) {
+    //     for(int k = 0; k < signal.imgs_red_ex_yellow[i][j].size(); k++) {
+    //       imshow("RYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_red_ex_yellow[i][j][k]);
+    //     }
+    //   }
+    // }
+    // for (int i = 0; i < signal.imgs_green_ex_yellow.size(); i++) {
+    //   for (int j = 0; j < signal.imgs_green_ex_yellow[i].size(); j++) {
+    //     for(int k = 0; k < signal.imgs_green_ex_yellow[i][j].size(); k++) {
+    //       imshow("GYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_green_ex_yellow[i][j][k]);
+    //     }
+    //   }
+    // }
     cout << "Signal state : " << signal.signal_state << endl;
+    auto end = std::chrono::high_resolution_clock::now();  // 終了時間
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    // CSVに書き込み
+    csv_file << loop_index++ << "," << duration << "\n";
     int key = waitKey(0);
     if(key == ' ') break;
     else if(key == 'a') --signal.file_cnt;
@@ -56,7 +70,7 @@ int main() {
     int sz = signal.files_png.size();
     if(signal.file_cnt > sz - 1) signal.file_cnt = 0;
     else if (signal.file_cnt < 0) signal.file_cnt = sz - 1;
-    destroyAllWindows();
+    // destroyAllWindows();
   } // while(1)
   return 0;
 } // main()
