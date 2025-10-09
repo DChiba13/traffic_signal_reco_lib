@@ -5,7 +5,7 @@ namespace signal_reco {
 /*** コンストラクタ ***/
 SignalReco::SignalReco()
 {
-  initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
+  initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
   initImgPcdName(IMG_PCD_PATH);
 }
 /*** デストラクタ ***/
@@ -600,7 +600,7 @@ void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, ve
         if (w <= 0 || h <= 0) continue; // 幅と高さが0以下の場合はスキップ
         Mat img_yellow = imgs[i](Rect(x, y, w, h));
         Mat img_yellow_bin = Mat::zeros(img_yellow.size(), CV_8UC1);
-        imshow("img_yellow", img_yellow);
+        // imshow("img_yellow", img_yellow);
         Mat img_yellow_hsv;
         cvtColor(img_yellow, img_yellow_hsv, COLOR_BGR2HSV);
         inRange(img_yellow_hsv, Scalar(MIN_H_YELLOW, MIN_S_YELLOW, MIN_V_YELLOW), Scalar(MAX_H_YELLOW, MAX_S_YELLOW, MAX_V_YELLOW), img_yellow_bin);
@@ -608,7 +608,7 @@ void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, ve
         // /*** 黄色の色付き画像を表示したいのであればコメントアウトを外す *********************************
         Mat img_yellow_color;
         bitwise_and(img_yellow, img_yellow, img_yellow_color, img_yellow_bin);
-        imshow("img_yellow_color", img_yellow_color);
+        // imshow("img_yellow_color", img_yellow_color);
         // ***/
       }
       signal_imgs_yellow.push_back(yellow_imgs);
