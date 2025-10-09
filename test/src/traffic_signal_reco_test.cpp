@@ -16,20 +16,20 @@ int main() {
     signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.src_points);
     signal.loop_main();
     imshow("Window Main", signal.camera_img);
-    // imshow("LiDAR Reflect Image", signal.lidar_img_ref);
+    imshow("LiDAR Reflect Image", signal.lidar_img_ref);
     imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
     imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
     // imshow("LIDAR Reflect Img Bin", signal.lidar_img_ref_bin);
     // imshow("LiDAR Range Image", signal.lidar_img_range);
-    // signal_imgs, signal_img_extract_red, greenの画像表示
+    /*** signal_imgs, signal_img_extract_red, greenの画像表示 ***/
     for (int i = 0; i < signal.signal_imgs.size(); i++) {
       imshow("Signal Image " + to_string(i), signal.signal_imgs[i]);
       imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
       imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
-      // imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
-      // imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
-      // imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
-      // imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
+      imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
+      imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
+      imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
+      imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
     }
     // imgs_ex_yellowの画像表示
     for (int i = 0; i < signal.imgs_red_ex_yellow.size(); i++) {
@@ -56,7 +56,7 @@ int main() {
     int sz = signal.files_png.size();
     if(signal.file_cnt > sz - 1) signal.file_cnt = 0;
     else if (signal.file_cnt < 0) signal.file_cnt = sz - 1;
-    destroyAllWindows();
+    // destroyAllWindows();
   } // while(1)
   return 0;
 } // main()
