@@ -606,8 +606,8 @@ void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, ve
         inRange(img_yellow_hsv, Scalar(MIN_H_YELLOW, MIN_S_YELLOW, MIN_V_YELLOW), Scalar(MAX_H_YELLOW, MAX_S_YELLOW, MAX_V_YELLOW), img_yellow_bin);
         yellow_imgs.push_back(img_yellow_bin);
         // /*** 黄色の色付き画像を表示したいのであればコメントアウトを外す *********************************
-        Mat img_yellow_color;
-        bitwise_and(img_yellow, img_yellow, img_yellow_color, img_yellow_bin);
+        // Mat img_yellow_color;
+        // bitwise_and(img_yellow, img_yellow, img_yellow_color, img_yellow_bin);
         // imshow("img_yellow_color", img_yellow_color);
         // ***/
       }
@@ -689,10 +689,10 @@ void SignalReco::drawResult(Mat &camera_img, const string &signal_state)
   int square_size = 50; // 正方形のサイズ
   if (signal_state == "RedLight") {
     rectangle(camera_img, Point(10, 10), Point(10 + square_size, 10 + square_size), Scalar(0, 0, 255), -1); // 赤色
-    putText(camera_img, "Red Light", Point(10 + square_size + 10, 10 + square_size / 2 + 12), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 0, 255), 2);
+    // putText(camera_img, "Red Light", Point(10 + square_size + 10, 10 + square_size / 2 + 12), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 0, 255), 2);
   } else if (signal_state == "GreenLight") {
     rectangle(camera_img, Point(10, 10), Point(10 + square_size, 10 + square_size), Scalar(0, 255, 0), -1); // 緑色
-    putText(camera_img, "Green Light", Point(10 + square_size + 10, 10 + square_size / 2 + 12), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 255, 0), 2);
+    // putText(camera_img, "Green Light", Point(10 + square_size + 10, 10 + square_size / 2 + 12), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 255, 0), 2);
   }
 }
 
