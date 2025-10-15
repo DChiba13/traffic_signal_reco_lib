@@ -106,6 +106,8 @@ double MIN_ASPECT_RATIO;
 double MAX_ASPECT_RATIO;
 /*** 候補領域内の黄色画素ピクセル数の閾値 ***/
 int YELLOW_PIX_TH;
+double MIN_ASPECT_RATIO_YELLOW;
+double MAX_ASPECT_RATIO_YELLOW;
 /*** 信号認識領域の標識の矩形による倍率 ***/
 float SIGNAL_RECO_REGION_WIDTH, SIGNAL_RECO_REGION_HEIGHT;
 

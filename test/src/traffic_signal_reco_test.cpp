@@ -10,14 +10,14 @@ int main() {
   signal.getFiles(signal.pcd_path, ".pcd", signal.files_pcd);
 
   // CSV出力用のファイルを開く
-  std::ofstream csv_file("/home/revast/loop_time.csv");
-  csv_file << "loop_index,time_ms\n";  // ヘッダー行
+  // std::ofstream csv_file("/home/revast/loop_time.csv");
+  // csv_file << "loop_index,time_ms\n";  // ヘッダー行
 
-  int loop_index = 0;
+  // int loop_index = 0;
 
   while(1) 
   {
-    auto start = std::chrono::high_resolution_clock::now();  // 開始時間
+    // auto start = std::chrono::high_resolution_clock::now();  // 開始時間
     cout << "Camera file : " << signal.files_png[signal.file_cnt].string() << endl;
     /*** カメラ画像の読み込み ***/
     signal.src_camera_img = imread(signal.files_png[signal.file_cnt].string(), 1);
@@ -41,26 +41,26 @@ int main() {
       imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
     }
     // imgs_ex_yellowの画像表示
-    // for (int i = 0; i < signal.imgs_red_ex_yellow.size(); i++) {
-    //   for (int j = 0; j < signal.imgs_red_ex_yellow[i].size(); j++) {
-    //     for(int k = 0; k < signal.imgs_red_ex_yellow[i][j].size(); k++) {
-    //       imshow("RYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_red_ex_yellow[i][j][k]);
-    //     }
-    //   }
-    // }
-    // for (int i = 0; i < signal.imgs_green_ex_yellow.size(); i++) {
-    //   for (int j = 0; j < signal.imgs_green_ex_yellow[i].size(); j++) {
-    //     for(int k = 0; k < signal.imgs_green_ex_yellow[i][j].size(); k++) {
-    //       imshow("GYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_green_ex_yellow[i][j][k]);
-    //     }
-    //   }
-    // }
+    for (int i = 0; i < signal.imgs_red_ex_yellow.size(); i++) {
+      for (int j = 0; j < signal.imgs_red_ex_yellow[i].size(); j++) {
+        for(int k = 0; k < signal.imgs_red_ex_yellow[i][j].size(); k++) {
+          imshow("RYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_red_ex_yellow[i][j][k]);
+        }
+      }
+    }
+    for (int i = 0; i < signal.imgs_green_ex_yellow.size(); i++) {
+      for (int j = 0; j < signal.imgs_green_ex_yellow[i].size(); j++) {
+        for(int k = 0; k < signal.imgs_green_ex_yellow[i][j].size(); k++) {
+          imshow("GYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_green_ex_yellow[i][j][k]);
+        }
+      }
+    }
     cout << "Signal state : " << signal.signal_state << endl;
-    auto end = std::chrono::high_resolution_clock::now();  // 終了時間
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    // auto end = std::chrono::high_resolution_clock::now();  // 終了時間
+    // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     // CSVに書き込み
-    csv_file << loop_index++ << "," << duration << "\n";
+    // csv_file << loop_index++ << "," << duration << "\n";
     int key = waitKey(0);
     if(key == ' ') break;
     else if(key == 'a') --signal.file_cnt;
