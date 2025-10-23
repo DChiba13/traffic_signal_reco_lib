@@ -6,6 +6,7 @@ namespace signal_reco {
 SignalReco::SignalReco()
 {
   initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
+  // initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
   initImgPcdName(IMG_PCD_PATH);
 }
 /*** デストラクタ ***/
@@ -51,10 +52,6 @@ void SignalReco::initParam(const string &path)
   LIDAR_VIEW_ANGLE_V = Deg2Rad(LIDAR_VIEW_ANGLE_V);
   LIDAR_RESOLUTION_H = Deg2Rad(LIDAR_RESOLUTION_H);
   LIDAR_RESOLUTION_V = Deg2Rad(LIDAR_RESOLUTION_V);
-  cout << "LIDAR_VIEW_ANGLE_H : " << LIDAR_VIEW_ANGLE_H << endl;
-  cout << "LIDAR_VIEW_ANGLE_V : " << LIDAR_VIEW_ANGLE_V << endl;
-  cout << "LIDAR_RESOLUTION_H : " << LIDAR_RESOLUTION_H << endl;
-  cout << "LIDAR_RESOLUTION_V : " << LIDAR_RESOLUTION_V << endl;
   X_DIFF = pt.get<double>("X_DIFF");
   Y_DIFF = pt.get<double>("Y_DIFF");
   Z_DIFF = pt.get<double>("Z_DIFF");
@@ -99,7 +96,8 @@ void SignalReco::initParam(const string &path)
   MIN_ASPECT_RATIO = pt.get<double>("MIN_ASPECT_RATIO");
   MAX_ASPECT_RATIO = pt.get<double>("MAX_ASPECT_RATIO");
   YELLOW_PIX_TH = pt.get<int>("YELLOW_PIX_TH");
-
+  MIN_ASPECT_RATIO_YELLOW = pt.get<double>("MIN_ASPECT_RATIO_YELLOW");
+  MAX_ASPECT_RATIO_YELLOW = pt.get<double>("MAX_ASPECT_RATIO_YELLOW");
 }
 
 /* ファイル名を取得 */
@@ -606,8 +604,8 @@ void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, ve
         inRange(img_yellow_hsv, Scalar(MIN_H_YELLOW, MIN_S_YELLOW, MIN_V_YELLOW), Scalar(MAX_H_YELLOW, MAX_S_YELLOW, MAX_V_YELLOW), img_yellow_bin);
         yellow_imgs.push_back(img_yellow_bin);
         // /*** 黄色の色付き画像を表示したいのであればコメントアウトを外す *********************************
-        // Mat img_yellow_color;
-        // bitwise_and(img_yellow, img_yellow, img_yellow_color, img_yellow_bin);
+        Mat img_yellow_color;
+        bitwise_and(img_yellow, img_yellow, img_yellow_color, img_yellow_bin);
         // imshow("img_yellow_color", img_yellow_color);
         // ***/
       }
@@ -617,11 +615,17 @@ void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, ve
   }
 }
 
-void SignalReco::labelingYellow(const vector<vector<vector<Mat>>> &imgs_ex_yellow, vector<vector<vector<Mat>>> &imgs_yellow_labeling, vector<vector<vector<Mat>>> &imgs_yellow_stats, int &num_figures, string &signal_state, bool is_red)
+void SignalReco::labelingYellow(
+    const vector<vector<vector<Mat>>> &imgs_ex_yellow,
+    vector<vector<vector<Mat>>> &imgs_yellow_labeling,
+    vector<vector<vector<Mat>>> &imgs_yellow_stats,
+    int &num_figures,
+    string &signal_state,
+    bool is_red)
 {
-  // ラベリングされた二値化画像に番号を描画する処理を加える
   imgs_yellow_labeling.clear();
   imgs_yellow_stats.clear();
+  int local_num_figures;
   for (const auto &signal_imgs_yellow : imgs_ex_yellow) {
     vector<vector<Mat>> signal_labeling;
     vector<vector<Mat>> signal_stats;
@@ -629,26 +633,37 @@ void SignalReco::labelingYellow(const vector<vector<vector<Mat>>> &imgs_ex_yello
       vector<Mat> yellow_labeling;
       vector<Mat> yellow_stats;
       for (const auto &img_yellow : yellow_imgs) {
+        // cout << "Processing yellow image of size: " << img_yellow.size() << endl;
+        local_num_figures = 0;
         Mat img_label, img_stats, img_centroids;
-        int num_labels = connectedComponentsWithStats(img_yellow, img_label, img_stats, img_centroids, 8, CV_32S);
+        int num_labels = connectedComponentsWithStats(
+            img_yellow, img_label, img_stats, img_centroids, 8, CV_32S);
         Mat valid_stats;
-        for (int l = 1; l < num_labels; ++l) {  
+        for (int l = 1; l < num_labels; ++l) {
           int area = img_stats.at<int>(l, cv::CC_STAT_AREA);
-          if (area >= YELLOW_PIX_TH) {
-            // valid_stats.push_back(img_stats.row(l));
-            // // ラベルの中心座標を取得
-            // double x = img_centroids.at<double>(l, 0);
-            // double y = img_centroids.at<double>(l, 1);
-
-            // std::string label_text = std::to_string(l);
-            // putText(img_yellow, label_text, cv::Point(static_cast<int>(x), static_cast<int>(y)), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
-            num_figures++;
+          int width = img_stats.at<int>(l, cv::CC_STAT_WIDTH);
+          int height = img_stats.at<int>(l, cv::CC_STAT_HEIGHT);
+          if (height <= 0) continue;
+          double aspect_ratio = static_cast<double>(width) / height;
+          if (area >= YELLOW_PIX_TH &&
+              aspect_ratio >= MIN_ASPECT_RATIO_YELLOW &&
+              aspect_ratio <= MAX_ASPECT_RATIO_YELLOW) {
+            // cout << "Yellow signal candidate found: Area=" << area
+            //      << ", Aspect Ratio=" << aspect_ratio << endl;
+            valid_stats.push_back(img_stats.row(l));
+            local_num_figures++;
           }
         }
         if (valid_stats.rows > 0) {
           yellow_labeling.push_back(img_label);
           yellow_stats.push_back(valid_stats.clone());
+        } else {
+          // 条件を満たさない場合は空でも push しておく
+          yellow_labeling.push_back(Mat());
+          yellow_stats.push_back(Mat());
         }
+        // このブロックで見つかった矩形を全体カウンタに加算
+        num_figures += local_num_figures;
       }
       signal_labeling.push_back(yellow_labeling);
       signal_stats.push_back(yellow_stats);
@@ -656,7 +671,8 @@ void SignalReco::labelingYellow(const vector<vector<vector<Mat>>> &imgs_ex_yello
     imgs_yellow_labeling.push_back(signal_labeling);
     imgs_yellow_stats.push_back(signal_stats);
   }
-  
+
+  // 最終判定は累積された num_figures を使用
   if (num_figures >= 1 && is_red) {
     signal_state = "RedLight";
   } else if (num_figures >= 1 && !is_red) {
