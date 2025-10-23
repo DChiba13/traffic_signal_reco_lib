@@ -1,6 +1,9 @@
 #include "traffic_signal_reco.hpp"
 #include <chrono>
 #include <fstream>
+#include <filesystem>
+#include <iomanip>
+#include <ctime>
 /*** Global variable ***/
 static signal_reco::SignalReco signal;
 using namespace signal_reco;
@@ -8,9 +11,29 @@ int main() {
   /*** ディレクトリからpngとpcdファイル名を取得 ***/
   signal.getFiles(signal.img_path, ".png", signal.files_png);
   signal.getFiles(signal.pcd_path, ".pcd", signal.files_pcd);
+  /*** 保存ディレクトリ設定 ***/
+  std::string base_dir = "/home/chiba/share/result_tr_reco/loop_time";
+  // ディレクトリが存在しない場合は作成
+  if (!fs::exists(base_dir)) {
+    fs::create_directories(base_dir);
+  }
 
-  // CSV出力用のファイルを開く
-  std::ofstream csv_file("/home/revast/loop_time.csv");
+  /*** 日時付きファイル名生成 ***/
+  auto now = std::chrono::system_clock::now();
+  std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+  std::tm local_tm = *std::localtime(&now_c);
+
+  std::ostringstream oss;
+  oss << std::put_time(&local_tm, "%Y_%m_%d_%H_%M") << ".csv";
+
+  std::string filename = (fs::path(base_dir) / oss.str()).string();
+  
+  /*** CSV出力用ファイルを開く ***/
+  std::ofstream csv_file(filename);
+  if (!csv_file.is_open()) {
+    std::cerr << "Failed to open CSV file: " << filename << std::endl;
+    return -1;
+  }
   csv_file << "loop_index,time_ms\n";  // ヘッダー行
 
   int loop_index = 0;
@@ -72,5 +95,6 @@ int main() {
     else if (signal.file_cnt < 0) signal.file_cnt = sz - 1;
     // destroyAllWindows();
   } // while(1)
+  std::cout << "CSV file saved to: " << filename << std::endl;
   return 0;
 } // main()
