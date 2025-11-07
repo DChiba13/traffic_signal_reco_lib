@@ -451,7 +451,7 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
 
       // === 5. 最後まで0なら警告 ===
       if (range == 0.0f) {
-        std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
+        // std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
         continue;
       }
 
@@ -817,7 +817,7 @@ void SignalReco::loop_main()
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, sign_rect_points_robot); // 正規スクリーン座標系をロボット座標系に変換
   perspectiveProjectionModel(sign_rect_points_robot, sign_rects_camimg_perspective); // 透視投影モデルを適用
   centeredScreen2ScreenCoords(camera_img.size(), sign_rects_camimg_perspective, sign_rects); // 正規スクリーン座標系をスクリーン座標系に変換
-  drawSignOnCameraImg(camera_img, sign_rects); // カメラ画像に標識の矩形を描画
+  // drawSignOnCameraImg(camera_img, sign_rects); // カメラ画像に標識の矩形を描画
   storeSignalRects(sign_rects, signal_rects); // 信号の矩形を格納
   // drawSignalRectsOnCameraImg(camera_img, signal_rects); // カメラ画像に信号の矩形を描画
   /*** 画像処理による歩行者用信号の色認識 **********************************************************************/
