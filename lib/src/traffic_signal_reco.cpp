@@ -832,8 +832,8 @@ void SignalReco::loop_main()
   // imgs_extract_dilatedの画像にラベリング処理を適用する関数
   labeling(imgs_red_dilated, imgs_red_labeling, imgs_red_stats); // 赤色の画像にラベリング処理を適用
   labeling(imgs_green_dilated, imgs_green_labeling, imgs_green_stats); // 緑色の画像にラベリング処理を適用
-  drawSignalCandidates(signal_imgs, imgs_red_stats, true); // 候補領域に桃色の矩形を描画
-  drawSignalCandidates(signal_imgs, imgs_green_stats, false); // 候補領域に水色の矩形を描画
+  // drawSignalCandidates(signal_imgs, imgs_red_stats, true); // 候補領域に桃色の矩形を描画
+  // drawSignalCandidates(signal_imgs, imgs_green_stats, false); // 候補領域に水色の矩形を描画
   imgs_red_ex_yellow.clear(); // 黄色の人型を格納するための変数を初期化
   imgs_green_ex_yellow.clear(); // 黄色の人型を格納するための変数を初期化
   imgs_red_ex_yellow_labeling.clear(); // 黄色の人型にラベリング処理を適用するための変数を初期化
