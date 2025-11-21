@@ -65,19 +65,19 @@ int main() {
     signal.loop_main();
 
     imshow("Window Main", signal.camera_img);
-    imshow("LiDAR Reflect Image", signal.lidar_img_ref);
-    imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
-    imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
+    // imshow("LiDAR Reflect Image", signal.lidar_img_ref);
+    // imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
+    // imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
 
-    for (int i = 0; i < signal.signal_imgs.size(); i++) {
-      imshow("Signal Image " + to_string(i), signal.signal_imgs[i]);
-      // imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
-      // imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
-      // imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
-      // imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
-      // imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
-      // imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
-    }
+    // for (int i = 0; i < signal.signal_imgs.size(); i++) {
+    //   imshow("Signal Image " + to_string(i), signal.signal_imgs[i]);
+    //   // imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
+    //   // imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
+    //   // imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
+    //   // imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
+    //   // imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
+    //   // imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
+    // }
 
     auto end = std::chrono::high_resolution_clock::now();  // 終了時間
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

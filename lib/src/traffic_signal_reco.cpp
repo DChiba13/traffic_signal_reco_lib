@@ -329,9 +329,9 @@ void SignalReco::rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_b
     sign_rects_refimg_screen.push_back(rect_points);
   }
   // 矩形を描画
-  for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
-    cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
-  }
+  // for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
+  //   cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
+  // }
 }
 
 void SignalReco::screen2CenteredCoords(cv::Size image_size, const vector<vector<cv::Point2i>> &sign_rect_refimg_screen, vector<vector<cv::Point2i>> &sign_rects_refimg_centered_screen)
@@ -834,18 +834,18 @@ void SignalReco::loop_main()
   remap(src_camera_img, camera_img, map_x, map_y, INTER_LINEAR);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
   projectToImage(points, lidar_img, true); // 反射強度画像、距離画像の作成
-  projectToImageForView(points, lidar_img_fov); // 反射強度画像、距離画像の作成（画像確認用）
+  // projectToImageForView(points, lidar_img_fov); // 反射強度画像、距離画像の作成（画像確認用）
   drawObjectsReflect(lidar_img, lidar_img_ref); // 反射強度画像の描画
-  drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
+  // drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
   drawObjectsRange(lidar_img, lidar_img_range); // 距離画像の描画
-  drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
+  // drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  // 反射強度画像の矩形領域を検出
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); // 矩形領域の座標系を正規スクリーン座標系に変換
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); // 正規スクリーン座標系をロボット座標系に変換
-  // rotateRectPoints(sign_rect_points_robot, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), sign_rect_points_robot); // ロボット座標系を回転
+  rotateRectPoints(src_sign_rect_points_robot, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), sign_rect_points_robot); // ロボット座標系を回転
   perspectiveProjectionModel(sign_rect_points_robot, sign_rects_camimg_perspective); // 透視投影モデルを適用
   centeredScreen2ScreenCoords(camera_img.size(), sign_rects_camimg_perspective, sign_rects); // 正規スクリーン座標系をスクリーン座標系に変換
-  drawSignOnCameraImg(camera_img, sign_rects); // カメラ画像に標識の矩形を描画
+  // drawSignOnCameraImg(camera_img, sign_rects); // カメラ画像に標識の矩形を描画
   storeSignalRects(sign_rects, signal_rects); // 信号の矩形を格納
   // drawSignalRectsOnCameraImg(camera_img, signal_rects); // カメラ画像に信号の矩形を描画
   /*** 画像処理による歩行者用信号の色認識 **********************************************************************/
@@ -860,8 +860,8 @@ void SignalReco::loop_main()
   // imgs_extract_dilatedの画像にラベリング処理を適用する関数
   labeling(imgs_red_dilated, imgs_red_labeling, imgs_red_stats); // 赤色の画像にラベリング処理を適用
   labeling(imgs_green_dilated, imgs_green_labeling, imgs_green_stats); // 緑色の画像にラベリング処理を適用
-  drawSignalCandidates(signal_imgs, imgs_red_stats, true); // 候補領域に桃色の矩形を描画
-  drawSignalCandidates(signal_imgs, imgs_green_stats, false); // 候補領域に水色の矩形を描画
+  // drawSignalCandidates(signal_imgs, imgs_red_stats, true); // 候補領域に桃色の矩形を描画
+  // drawSignalCandidates(signal_imgs, imgs_green_stats, false); // 候補領域に水色の矩形を描画
   imgs_red_ex_yellow.clear(); // 黄色の人型を格納するための変数を初期化
   imgs_green_ex_yellow.clear(); // 黄色の人型を格納するための変数を初期化
   imgs_red_ex_yellow_labeling.clear(); // 黄色の人型にラベリング処理を適用するための変数を初期化
