@@ -117,10 +117,10 @@ void SignalReco::getFiles(const fs::path &path, const string &extension, vector<
 bool SignalReco::loadPCD(const string &path, vector<LidarData> &points)
 {
   if (pr::loadPointsFromLog(path, points)) {
-      return true;
+    return true;
   } else {
-      cerr << "Failed to load points from file." << endl;
-      return false;
+    cerr << "Failed to load points from file." << endl;
+    return false;
   }
 }
 
@@ -330,7 +330,7 @@ void SignalReco::rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_b
   }
   // 矩形を描画
   for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
-    // cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
+    cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
   }
 }
 
@@ -464,6 +464,34 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
     }
   }
 }
+
+void SignalReco::rotateRectPoints(const std::vector<std::vector<cv::Point3f>> &src, float roll, float pitch, float yaw, std::vector<std::vector<cv::Point3f>> &dst)
+{
+  float qw, qx, qy, qz;
+  euler2Quaternion(roll, pitch, yaw, qw, qx, qy, qz);
+  qz = -qz;
+  std::vector<float> r{
+    (qw*qw) + (qx*qx) - (qy*qy) - (qz*qz),  2*(qw*qz + qx*qy),           2*(qx*qz - qw*qy),
+    2*(qx*qy - qw*qz),                     (qw*qw) - (qx*qx) + (qy*qy) - (qz*qz), 2*(qy*qz + qw*qx),
+    2*(qw*qy + qx*qz),                     2*(-qw*qx + qy*qz),           (qw*qw) - (qx*qx) - (qy*qy) + (qz*qz)
+  };
+  dst.resize(src.size());
+  for (size_t i = 0; i < src.size(); i++){
+    dst[i].resize(src[i].size());
+    for (size_t j = 0; j < src[i].size(); j++){
+      float x = src[i][j].x;
+      float y = src[i][j].y;
+      float z = src[i][j].z;
+      dst[i][j].x = r[0]*x + r[1]*y + r[2]*z;
+      dst[i][j].y = r[3]*x + r[4]*y + r[5]*z;
+      dst[i][j].z = r[6]*x + r[7]*y + r[8]*z;
+      dst[i][j].x -= X_DIFF;
+      dst[i][j].y -= Y_DIFF;
+      dst[i][j].z -= Z_DIFF;
+    }
+  }
+}
+
 
 void SignalReco::perspectiveProjectionModel(const vector<vector<cv::Point3f>> &sign_rect_points_robot, vector<vector<cv::Point2i>> &sign_rects_perspective)
 {
@@ -786,7 +814,7 @@ void SignalReco::loop_main()
     return;
   }
   /*** 点群が読み込まれているか確認 **/
-  if (src_points.empty()) {
+  if (points.empty()) {
     std::cerr << "Error: Could not read point cloud data" << std::endl;
     return;
   }
@@ -804,7 +832,6 @@ void SignalReco::loop_main()
   initUndistortRectifyMap(camera_params, distortion_params, rectify_params, projection_params, sz, CV_32FC1, map_x, map_y);
   /*** 変換処理、カメラ画像の歪み補正 ***/
   remap(src_camera_img, camera_img, map_x, map_y, INTER_LINEAR);
-  rotatePoints(src_points, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), points);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
   projectToImage(points, lidar_img, true); // 反射強度画像、距離画像の作成
   projectToImageForView(points, lidar_img_fov); // 反射強度画像、距離画像の作成（画像確認用）
@@ -814,7 +841,8 @@ void SignalReco::loop_main()
   drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  // 反射強度画像の矩形領域を検出
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); // 矩形領域の座標系を正規スクリーン座標系に変換
-  centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, sign_rect_points_robot); // 正規スクリーン座標系をロボット座標系に変換
+  centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); // 正規スクリーン座標系をロボット座標系に変換
+  // rotateRectPoints(sign_rect_points_robot, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), sign_rect_points_robot); // ロボット座標系を回転
   perspectiveProjectionModel(sign_rect_points_robot, sign_rects_camimg_perspective); // 透視投影モデルを適用
   centeredScreen2ScreenCoords(camera_img.size(), sign_rects_camimg_perspective, sign_rects); // 正規スクリーン座標系をスクリーン座標系に変換
   drawSignOnCameraImg(camera_img, sign_rects); // カメラ画像に標識の矩形を描画

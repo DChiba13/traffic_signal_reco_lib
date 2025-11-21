@@ -60,7 +60,7 @@ int main() {
     signal.src_camera_img = imread(signal.files_png[signal.file_cnt].string(), 1);
 
     /*** 点群の読み込み ***/
-    signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.src_points);
+    signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.points);
 
     signal.loop_main();
 
