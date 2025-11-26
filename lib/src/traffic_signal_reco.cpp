@@ -767,8 +767,8 @@ void SignalReco::loop_main()
   // imgs_extract_dilatedの画像にラベリング処理を適用する関数
   labeling(imgs_red_dilated, imgs_red_labeling, imgs_red_stats); // 赤色の画像にラベリング処理を適用
   labeling(imgs_green_dilated, imgs_green_labeling, imgs_green_stats); // 緑色の画像にラベリング処理を適用
-  // drawSignalCandidates(signal_imgs, imgs_red_stats, true); // 候補領域に桃色の矩形を描画
-  // drawSignalCandidates(signal_imgs, imgs_green_stats, false); // 候補領域に水色の矩形を描画
+  drawSignalCandidates(signal_imgs, imgs_red_stats, true); // 候補領域に桃色の矩形を描画
+  drawSignalCandidates(signal_imgs, imgs_green_stats, false); // 候補領域に水色の矩形を描画
   imgs_red_ex_yellow.clear(); // 黄色の人型を格納するための変数を初期化
   imgs_green_ex_yellow.clear(); // 黄色の人型を格納するための変数を初期化
   imgs_red_ex_yellow_labeling.clear(); // 黄色の人型にラベリング処理を適用するための変数を初期化
@@ -781,8 +781,8 @@ void SignalReco::loop_main()
   signal_state = "";
   labelingYellow(imgs_red_ex_yellow, imgs_red_ex_yellow_labeling, imgs_red_ex_yellow_stats, num_figures_red, signal_state, true); // 黄色の人型にラベリング処理を適用　赤信号を判定
   labelingYellow(imgs_green_ex_yellow, imgs_green_ex_yellow_labeling, imgs_green_ex_yellow_stats, num_figures_green, signal_state, false); // 黄色の人型にラベリング処理を適用　青信号を判定
-  drawRects(imgs_red_stats, num_figures_red, signal_imgs, true);
-  drawRects(imgs_green_stats, num_figures_green, signal_imgs, false);
+  // drawRects(imgs_red_stats, num_figures_red, signal_imgs, true);
+  // drawRects(imgs_green_stats, num_figures_green, signal_imgs, false);
   drawResult(camera_img, signal_state); // 信号の状態をカメラ画像に描画
 } // loop_main()
 
