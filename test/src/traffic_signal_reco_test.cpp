@@ -64,6 +64,9 @@ int main() {
 
     signal.loop_main();
 
+    auto end = std::chrono::high_resolution_clock::now();  // 終了時間
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
     imshow("Window Main", signal.camera_img);
     imshow("LiDAR Reflect Image", signal.lidar_img_ref);
     // imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
@@ -71,16 +74,28 @@ int main() {
 
     for (int i = 0; i < signal.signal_imgs.size(); i++) {
       imshow("Signal Image " + to_string(i), signal.signal_imgs[i]);
-      // imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
-      // imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
-      // imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
-      // imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
-      // imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
-      // imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
+      imshow("Red " + to_string(i), signal.imgs_extract_red[i]);
+      imshow("Green " + to_string(i), signal.imgs_extract_green[i]);
+      imshow("RMedian " + to_string(i), signal.imgs_red_median[i]);
+      imshow("GMedian " + to_string(i), signal.imgs_green_median[i]);
+      imshow("RDilated " + to_string(i), signal.imgs_red_dilated[i]);
+      imshow("GDilated " + to_string(i), signal.imgs_green_dilated[i]);
     }
-
-    auto end = std::chrono::high_resolution_clock::now();  // 終了時間
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    /* imgs_ex_yellowの画像表示 */
+    for (int i = 0; i < signal.imgs_red_ex_yellow.size(); i++) {
+      for (int j = 0; j < signal.imgs_red_ex_yellow[i].size(); j++) {
+        for(int k = 0; k < signal.imgs_red_ex_yellow[i][j].size(); k++) {
+          imshow("RYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_red_ex_yellow[i][j][k]);
+        }
+      }
+    }
+    for (int i = 0; i < signal.imgs_green_ex_yellow.size(); i++) {
+      for (int j = 0; j < signal.imgs_green_ex_yellow[i].size(); j++) {
+        for(int k = 0; k < signal.imgs_green_ex_yellow[i][j].size(); k++) {
+          imshow("GYellow " + to_string(i) + "_" + to_string(j) + "_" + to_string(k), signal.imgs_green_ex_yellow[i][j][k]);
+        }
+      }
+    }
 
     std::cout << "Signal state : " << signal.signal_state << std::endl;
 
