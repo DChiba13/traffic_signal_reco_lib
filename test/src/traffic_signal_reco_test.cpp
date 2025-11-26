@@ -54,16 +54,14 @@ int main() {
   {
     std::cout << "Camera file : " << signal.files_png[signal.file_cnt].string() << std::endl;
 
-    auto start = std::chrono::high_resolution_clock::now();  // 開始時間
-
     /*** カメラ画像の読み込み ***/
     signal.src_camera_img = imread(signal.files_png[signal.file_cnt].string(), 1);
 
     /*** 点群の読み込み ***/
     signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.points);
 
+    auto start = std::chrono::high_resolution_clock::now();  // 開始時間
     signal.loop_main();
-
     auto end = std::chrono::high_resolution_clock::now();  // 終了時間
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
