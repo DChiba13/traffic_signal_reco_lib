@@ -37,11 +37,11 @@ int main() {
     return -1;
   }
 
-  csv_file << "loop_index,time_ms,signal_state,result\n";  // ヘッダー行
+  csv_file << "loop_index,time_ms,signal_state,result\n";  /* ヘッダー行 */
 
   int loop_index = 0;
 
-  // 履歴管理（取り消し用）
+  /* 履歴管理（取り消し用）*/
   struct Record {
     int loop_index;
     long time_ms;
@@ -60,9 +60,9 @@ int main() {
     /*** 点群の読み込み ***/
     signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.points);
 
-    auto start = std::chrono::high_resolution_clock::now();  // 開始時間
+    auto start = std::chrono::high_resolution_clock::now(); /* 開始時間 */
     signal.loop_main();
-    auto end = std::chrono::high_resolution_clock::now();  // 終了時間
+    auto end = std::chrono::high_resolution_clock::now();  /* 終了時間 */
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     imshow("Window Main", signal.camera_img);
@@ -108,11 +108,11 @@ int main() {
         return 0;
       }
       else if (key == 'a') {
-        // Undo: 直前の結果を取り消す
+        /* Undo: 直前の結果を取り消す */
         if (!records.empty()) {
           records.pop_back();
 
-          // CSVを上書きし直す
+          /* CSVを上書きし直す */
           csv_file.close();
           std::ofstream new_csv(filename);
           new_csv << "loop_index,time_ms,signal_state,result\n";
@@ -131,7 +131,7 @@ int main() {
         } else {
           std::cout << "[WARN] No record to undo." << std::endl;
         }
-        break; // ループを抜けて再表示
+        break; /* ループを抜けて再表示 */
       }
       else if (key == 'd') {
         result_text = "Correct";
@@ -147,7 +147,7 @@ int main() {
         continue;
       }
 
-      // 結果を保存
+      /* 結果を保存 */
       Record rec{loop_index, duration, signal.signal_state, result_text};
       records.push_back(rec);
       csv_file << rec.loop_index << "," << rec.time_ms << "," << rec.signal_state << "," << rec.result << "\n";
@@ -158,7 +158,7 @@ int main() {
       int sz = signal.files_png.size();
       if (signal.file_cnt > sz - 1) signal.file_cnt = 0;
       else if (signal.file_cnt < 0) signal.file_cnt = sz - 1;
-      break; // 次の画像へ
+      break; /* 次の画像へ */
     }
   }
 
