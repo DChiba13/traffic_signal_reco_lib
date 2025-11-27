@@ -18,7 +18,8 @@ int main() {
   signal.getFiles(signal.pcd_path, ".pcd", signal.files_pcd);
 
   /*** 保存ディレクトリ設定 ***/
-  std::string base_dir = "/home/chiba/share/result_tr_reco/loop_time";
+  // std::string base_dir = "/home/chiba/share/result_tr_reco/loop_time";
+  std::string base_dir = "/home/revast/chiba/loop_time_results";
   if (!fs::exists(base_dir)) fs::create_directories(base_dir);
 
   /*** 日時付きファイル名生成 ***/
