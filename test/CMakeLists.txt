@@ -24,23 +24,36 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
   ${HEADER_DIR}
 )
- # リンクディレクトリ
+
+# リンクディレクトリ
 link_directories(
   $ENV{LIBRARY_PATH}
   ${OpenCV_LIBRARY_DIRS}
   ${Boost_LIBRARY_DIRS}
   ${LIBRARY_DIR}
 )
-set(DEPENDENT_LIBS ${OpenCV_LIBS};traffic_signal_reco_core rs_common)
-set(EXECUTABLES traffic_signal_reco_test)
 
+set(EXECUTABLES
+  traffic_signal_reco_test
+  traffic_signal_reco_csv
+  traffic_signal_reco_master_thesis
+)
+
+# 共通リンクライブラリ
+set(DEPENDENT_LIBS
+  ${OpenCV_LIBS}
+  traffic_signal_reco_core
+  rs_common
+)
+
+# 実行ファイルを自動で生成 
 foreach(target IN LISTS EXECUTABLES)
-  message("${target}")
+  message("Add executable: ${target}")
   add_executable(${target} src/${target}.cpp)
   target_link_libraries(${target} ${DEPENDENT_LIBS})
 endforeach()
 
-# Set installation
+# インストール設定
 foreach(target IN LISTS EXECUTABLES)
   install(
     TARGETS ${target}
