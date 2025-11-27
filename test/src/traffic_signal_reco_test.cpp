@@ -9,16 +9,10 @@ int main() {
   signal.getFiles(signal.img_path, ".png", signal.files_png);
   signal.getFiles(signal.pcd_path, ".pcd", signal.files_pcd);
 
-<<<<<<< HEAD
   /*** 保存ディレクトリ設定 ***/
   // std::string base_dir = "/home/chiba/share/result_tr_reco/loop_time";
   std::string base_dir = "/home/revast/chiba/loop_time_results";
   if (!fs::exists(base_dir)) fs::create_directories(base_dir);
-=======
-  // CSV出力用のファイルを開く
-  // std::ofstream csv_file("/home/revast/loop_time.csv");
-  // csv_file << "loop_index,time_ms\n";  // ヘッダー行
->>>>>>> 84e3a5d634e9d3b3b5fce318f699e0f7e6fdff55
 
   // int loop_index = 0;
 
