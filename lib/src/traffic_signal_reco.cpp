@@ -781,8 +781,8 @@ void SignalReco::loop_main()
   signal_state = "";
   labelingYellow(imgs_red_ex_yellow, imgs_red_ex_yellow_labeling, imgs_red_ex_yellow_stats, num_figures_red, signal_state, true); // 黄色の人型にラベリング処理を適用　赤信号を判定
   labelingYellow(imgs_green_ex_yellow, imgs_green_ex_yellow_labeling, imgs_green_ex_yellow_stats, num_figures_green, signal_state, false); // 黄色の人型にラベリング処理を適用　青信号を判定
-  // drawRects(imgs_red_stats, num_figures_red, signal_imgs, true);
-  // drawRects(imgs_green_stats, num_figures_green, signal_imgs, false);
+  drawRects(imgs_red_stats, num_figures_red, signal_imgs, true);
+  drawRects(imgs_green_stats, num_figures_green, signal_imgs, false);
   drawResult(camera_img, signal_state); // 信号の状態をカメラ画像に描画
 } // loop_main()
 
