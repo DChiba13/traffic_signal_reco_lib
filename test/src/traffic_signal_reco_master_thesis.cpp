@@ -19,7 +19,11 @@ int main() {
     signal.getFiles(signal.pcd_path, ".pcd", signal.files_pcd);
 
     /*** ベース保存ディレクトリ ***/
-    std::string base_dir = "/home/chiba/share/result_tr_reco/master_thesis";
+    // std::string base_dir = "/home/chiba/share/result_tr_reco/master_thesis";
+    // std::string base_dir = "/home/revast/chiba/camelidar_inference_results/red_results";
+    // std::string base_dir = "/home/revast/chiba/camelidar_inference_results/blue1_results";
+    // std::string base_dir = "/home/revast/chiba/camelidar_inference_results/blue2_results";
+    std::string base_dir = "/home/revast/chiba/camelidar_inference_results/blue3_results";
 
     if (!fs::exists(base_dir)) fs::create_directories(base_dir);
 
