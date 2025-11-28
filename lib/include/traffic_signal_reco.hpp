@@ -134,6 +134,7 @@ public:
     void rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_bin, vector<vector<cv::Point2i>> &sign_rects);
     void screen2CenteredCoords(cv::Size image_size, const vector<vector<cv::Point2i>> &sign_rect_refimg_screen, vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen);
     void centeredScreen2RobotCoords(const Mat &lidar_img, const vector<vector<cv::Point2i>> &sign_rects_refimg_screen, const vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen, vector<vector<cv::Point3f>> &sign_rect_points_robot);
+    void rotateRectPoints(const std::vector<std::vector<cv::Point3f>> &src, float roll, float pitch, float yaw, std::vector<std::vector<cv::Point3f>> &dst);
     void perspectiveProjectionModel(const vector<vector<cv::Point3f>> &sign_rect_points_camera, vector<vector<cv::Point2i>> &sign_rects_perspective);
     void centeredScreen2ScreenCoords(cv::Size image_size, vector<vector<cv::Point2i>> &sign_rects_camimg_perspective, vector<vector<cv::Point2i>> &sign_rects);
     void drawSignOnCameraImg(const Mat &camera_img,  const vector<vector<cv::Point2i>> &sign_rects);
@@ -175,9 +176,6 @@ public:
     Mat lidar_img_ref_bin;
     /* LiDAR画像 : 反射強度画像, 距離画像（確認用） */
     Mat lidar_img_fov, lidar_img_range_fov, lidar_img_ref_fov;
-    
-    /* ロボット座標系の生点群 */
-    vector<LidarData> src_points;
     /* 回転補正後の点群 */
     vector<LidarData> points;
     /* カメラ座標系に変換した点群 */
@@ -185,6 +183,7 @@ public:
     /* 標識の矩形 */
     vector<vector<cv::Point2i>> sign_rects_refimg_screen; // 反射強度画像の標識の矩形(px)(スクリーン座標系)
     vector<vector<cv::Point2i>> sign_rects_refimg_centered_screen; // 反射強度画像の標識の矩形(px)(正規スクリーン座標系)
+    vector<vector<cv::Point3f>> src_sign_rect_points_robot; // 標識の矩形(m)(ロボット座標系)
     vector<vector<cv::Point3f>> sign_rect_points_robot; // 標識の矩形(m)(ロボット座標系)
     vector<vector<cv::Point2i>> sign_rects_camimg_perspective; // カメラ画像の標識の矩形(m)(透視投影モデル適用後)
     vector<vector<cv::Point2i>> sign_rects; // カメラ画像の標識の矩形(px)(スクリーン座標系)

@@ -22,12 +22,12 @@ int main() {
     /*** カメラ画像の読み込み ***/
     signal.src_camera_img = imread(signal.files_png[signal.file_cnt].string(), 1);
     /*** 点群の読み込み ***/
-    signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.src_points);
+    signal.loadPCD(signal.files_pcd[signal.file_cnt].string(), signal.points);
     signal.loop_main();
     imshow("Window Main", signal.camera_img);
     imshow("LiDAR Reflect Image", signal.lidar_img_ref);
-    imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
-    imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
+    // imshow("LiDAR Reflect Image For View", signal.lidar_img_ref_fov);
+    // imshow("LiDAR Range Image For View", signal.lidar_img_range_fov);
     // imshow("LIDAR Reflect Img Bin", signal.lidar_img_ref_bin);
     // imshow("LiDAR Range Image", signal.lidar_img_range);
     /*** signal_imgs, signal_img_extract_red, greenの画像表示 ***/
