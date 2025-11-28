@@ -451,7 +451,7 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
 
       // === 5. 最後まで0なら警告 ===
       if (range == 0.0f) {
-        std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
+        // std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
         continue;
       }
 
@@ -834,11 +834,11 @@ void SignalReco::loop_main()
   remap(src_camera_img, camera_img, map_x, map_y, INTER_LINEAR);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
   projectToImage(points, lidar_img, true); /* 反射強度画像、距離画像の作成 */
-  // projectToImageForView(points, lidar_img_fov); /* 反射強度画像、距離画像の作成（画像確認用）*/
+  projectToImageForView(points, lidar_img_fov); /* 反射強度画像、距離画像の作成（画像確認用）*/
   drawObjectsReflect(lidar_img, lidar_img_ref); /* 反射強度画像の描画 */
-  // drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); /* 反射強度画像の描画（画像確認用）*/
+  drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); /* 反射強度画像の描画（画像確認用）*/
   drawObjectsRange(lidar_img, lidar_img_range); /* 距離画像の描画 */
-  // drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); /* 距離画像の描画（画像確認用）*/
+  drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); /* 距離画像の描画（画像確認用）*/
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  /* 反射強度画像の矩形領域を検出 */
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); /* 矩形領域の座標系を正規スクリーン座標系に変換 */
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); /* 正規スクリーン座標系をロボット座標系に変換 */
