@@ -5,8 +5,8 @@ namespace signal_reco {
 /*** コンストラクタ ***/
 SignalReco::SignalReco()
 {
-  // initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
-  initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
+  initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
+  // initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
   initImgPcdName(IMG_PCD_PATH);
 }
 /*** デストラクタ ***/
@@ -329,9 +329,15 @@ void SignalReco::rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_b
     sign_rects_refimg_screen.push_back(rect_points);
   }
   // 矩形を描画
+<<<<<<< HEAD
   // for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
   //   cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
   // }
+=======
+  for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
+    // cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
+  }
+>>>>>>> 805259fadf1f2b82a53d6a864e3b5e809f57a912
 }
 
 void SignalReco::screen2CenteredCoords(cv::Size image_size, const vector<vector<cv::Point2i>> &sign_rect_refimg_screen, vector<vector<cv::Point2i>> &sign_rects_refimg_centered_screen)
@@ -451,7 +457,11 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
 
       // === 5. 最後まで0なら警告 ===
       if (range == 0.0f) {
+<<<<<<< HEAD
         std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
+=======
+        // std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
+>>>>>>> 805259fadf1f2b82a53d6a864e3b5e809f57a912
         continue;
       }
 
@@ -833,6 +843,7 @@ void SignalReco::loop_main()
   /*** 変換処理、カメラ画像の歪み補正 ***/
   remap(src_camera_img, camera_img, map_x, map_y, INTER_LINEAR);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
+<<<<<<< HEAD
   projectToImage(points, lidar_img, true); /* 反射強度画像、距離画像の作成 */
   // projectToImageForView(points, lidar_img_fov); /* 反射強度画像、距離画像の作成（画像確認用）*/
   drawObjectsReflect(lidar_img, lidar_img_ref); /* 反射強度画像の描画 */
@@ -848,6 +859,22 @@ void SignalReco::loop_main()
   // drawSignOnCameraImg(camera_img, sign_rects); /* カメラ画像に標識の矩形を描画 */
   storeSignalRects(sign_rects, signal_rects); /* 信号の矩形を格納 */
   // drawSignalRectsOnCameraImg(camera_img, signal_rects); /* カメラ画像に信号の矩形を描画 */
+=======
+  projectToImage(points, lidar_img, true); // 反射強度画像、距離画像の作成
+  projectToImageForView(points, lidar_img_fov); // 反射強度画像、距離画像の作成（画像確認用）
+  drawObjectsReflect(lidar_img, lidar_img_ref); // 反射強度画像の描画
+  drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); // 反射強度画像の描画（画像確認用）
+  drawObjectsRange(lidar_img, lidar_img_range); // 距離画像の描画
+  drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); // 距離画像の描画（画像確認用）
+  rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  // 反射強度画像の矩形領域を検出
+  screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); // 矩形領域の座標系を正規スクリーン座標系に変換
+  centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, sign_rect_points_robot); // 正規スクリーン座標系をロボット座標系に変換
+  perspectiveProjectionModel(sign_rect_points_robot, sign_rects_camimg_perspective); // 透視投影モデルを適用
+  centeredScreen2ScreenCoords(camera_img.size(), sign_rects_camimg_perspective, sign_rects); // 正規スクリーン座標系をスクリーン座標系に変換
+  // drawSignOnCameraImg(camera_img, sign_rects); // カメラ画像に標識の矩形を描画
+  storeSignalRects(sign_rects, signal_rects); // 信号の矩形を格納
+  // drawSignalRectsOnCameraImg(camera_img, signal_rects); // カメラ画像に信号の矩形を描画
+>>>>>>> 805259fadf1f2b82a53d6a864e3b5e809f57a912
   /*** 画像処理による歩行者用信号の色認識 **********************************************************************/
   cropSignalRectsFromCameraImg(camera_img, signal_rects, signal_imgs); /* signal_rectsの座標情報を基にcamera_imgから信号の画像を切り出す */
   rgb2HSV(signal_imgs, signal_imgs_hsv); /* signal_imgsの画像をHSV色空間に変換 */
