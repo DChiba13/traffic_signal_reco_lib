@@ -875,26 +875,8 @@ void SignalReco::loop_main()
   extractYellow(signal_imgs, imgs_green_stats, imgs_green_ex_yellow); /* 候補領域の中から黄色の人形を抽出 */
   num_figures_red = 0, num_figures_green = 0;
   signal_state = "";
-  labelingYellow(
-    imgs_red_ex_yellow,      // 黄色抽出後画像
-    imgs_red_stats,          // 元の赤矩形 stats
-    imgs_red_stats_valid,    // 黄色条件を満たした赤矩形
-    imgs_red_ex_yellow_labeling,
-    imgs_red_ex_yellow_stats,
-    num_figures_red,
-    signal_state,
-    true                     // 赤信号
-);
-  labelingYellow(
-    imgs_green_ex_yellow,      // 黄色抽出後画像
-    imgs_green_stats,          // 元の緑矩形 stats
-    imgs_green_stats_valid,    // 黄色条件を満たした緑矩形
-    imgs_green_ex_yellow_labeling,
-    imgs_green_ex_yellow_stats,
-    num_figures_green,
-    signal_state,
-    false                     // 青信号
-);
+  labelingYellow(imgs_red_ex_yellow, imgs_red_stats, imgs_red_stats_valid, imgs_red_ex_yellow_labeling, imgs_red_ex_yellow_stats, num_figures_red, signal_state,true); /* 赤信号を判定 */
+  labelingYellow(imgs_green_ex_yellow, imgs_green_stats, imgs_green_stats_valid, imgs_green_ex_yellow_labeling, imgs_green_ex_yellow_stats, num_figures_green, signal_state,false); /* 青信号を判定 */
   drawRects(imgs_red_stats_valid, num_figures_red, signal_imgs, true); /* signal_imgsに赤の矩形を描画 */
   drawRects(imgs_green_stats_valid, num_figures_green, signal_imgs, false); /* signal_imgsに緑の矩形を描画 */
   drawResult(camera_img, signal_state); /* 信号の状態をカメラ画像に描画 */
