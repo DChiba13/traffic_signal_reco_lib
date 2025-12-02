@@ -148,8 +148,23 @@ public:
     void labeling(const vector<Mat> &imgs_extract_dilated, vector<Mat> &imgs_rabeled, vector<vector<Mat>> &stats);
     void drawSignalCandidates(const vector<Mat> &src, const vector<vector<Mat>> &stats, bool is_red = true);
     void extractYellow(vector<Mat> &signal_imgs, vector<vector<Mat>> &imgs_red_stats, vector<vector<vector<Mat>>> &imgs_extract_yellow);
-    void labelingYellow(const vector<vector<vector<Mat>>> &imgs_ex_yellow, vector<vector<vector<Mat>>> &imgs_yellow_rabeling, vector<vector<vector<Mat>>> &imgs_yellow_stats, int &num_figures, string &signal_state, bool is_red);
-    void drawRects(const vector<vector<Mat>> &stats, int num_figures, vector<Mat> &signal_imgs, bool is_red);
+   void labelingYellow(
+    const std::vector<std::vector<std::vector<cv::Mat>>> &imgs_ex_yellow, // 黄色抽出後画像
+    const std::vector<std::vector<cv::Mat>> &imgs_original_stats,        // 元の赤/緑矩形 stats
+    std::vector<std::vector<cv::Mat>> &imgs_stats_valid,                 // 黄色条件を満たした赤/緑矩形を返す
+    std::vector<std::vector<std::vector<cv::Mat>>> &imgs_yellow_labeling,
+    std::vector<std::vector<std::vector<cv::Mat>>> &imgs_yellow_stats,
+    int &num_figures,
+    std::string &signal_state,
+    bool is_red
+);
+
+    void drawRects(
+    const std::vector<std::vector<cv::Mat>> &stats,
+    int num_figures,
+    vector<cv::Mat> &img,
+    bool is_red
+);
     void drawResult(Mat &camera_img, const string &signal_state);
     void loop_main();
 

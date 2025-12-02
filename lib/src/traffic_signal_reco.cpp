@@ -677,102 +677,85 @@ void SignalReco::drawSignalCandidates(const vector<Mat> &src, const vector<vecto
   }
 }
 
-void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, vector<vector<vector<Mat>>> &imgs_ex_yellow)
-{
-  imgs_ex_yellow.clear();
-  for (int i = 0; i < imgs.size(); i++) {
-    vector<vector<Mat>> signal_imgs_yellow;
-    for (int j = 0; j < stats.size(); j++) {
-      vector<Mat> yellow_imgs;
-      for (int k = 0; k < stats[j].size(); k++) {
-        int x = stats[j][k].at<int>(cv::CC_STAT_LEFT);
-        int y = stats[j][k].at<int>(cv::CC_STAT_TOP);
-        int w = stats[j][k].at<int>(cv::CC_STAT_WIDTH);
-        int h = stats[j][k].at<int>(cv::CC_STAT_HEIGHT);
-        if (w <= 0 || h <= 0) continue; // 幅と高さが0以下の場合はスキップ
-        Mat img_yellow = imgs[i](Rect(x, y, w, h));
-        Mat img_yellow_bin = Mat::zeros(img_yellow.size(), CV_8UC1);
-        // imshow("img_yellow", img_yellow);
-        Mat img_yellow_hsv;
-        cvtColor(img_yellow, img_yellow_hsv, COLOR_BGR2HSV);
-        inRange(img_yellow_hsv, Scalar(MIN_H_YELLOW, MIN_S_YELLOW, MIN_V_YELLOW), Scalar(MAX_H_YELLOW, MAX_S_YELLOW, MAX_V_YELLOW), img_yellow_bin);
-        yellow_imgs.push_back(img_yellow_bin);
-        // /*** 黄色の色付き画像を表示したいのであればコメントアウトを外す *********************************
-        Mat img_yellow_color;
-        bitwise_and(img_yellow, img_yellow, img_yellow_color, img_yellow_bin);
-        // imshow("img_yellow_color", img_yellow_color);
-        // ***/
-      }
-      signal_imgs_yellow.push_back(yellow_imgs);
-    }
-    imgs_ex_yellow.push_back(signal_imgs_yellow);
-  }
-}
-
 void SignalReco::labelingYellow(
-    const vector<vector<vector<Mat>>> &imgs_ex_yellow,
-    vector<vector<vector<Mat>>> &imgs_yellow_labeling,
-    vector<vector<vector<Mat>>> &imgs_yellow_stats,
+    const std::vector<std::vector<std::vector<cv::Mat>>> &imgs_ex_yellow, // 黄色抽出後画像
+    const std::vector<std::vector<cv::Mat>> &imgs_original_stats,        // 元の赤/緑矩形 stats
+    std::vector<std::vector<cv::Mat>> &imgs_stats_valid,                 // 黄色条件を満たした赤/緑矩形を返す
+    std::vector<std::vector<std::vector<cv::Mat>>> &imgs_yellow_labeling,
+    std::vector<std::vector<std::vector<cv::Mat>>> &imgs_yellow_stats,
     int &num_figures,
-    string &signal_state,
-    bool is_red)
-{
-  imgs_yellow_labeling.clear();
-  imgs_yellow_stats.clear();
-  int local_num_figures;
-  for (const auto &signal_imgs_yellow : imgs_ex_yellow) {
-    vector<vector<Mat>> signal_labeling;
-    vector<vector<Mat>> signal_stats;
-    for (const auto &yellow_imgs : signal_imgs_yellow) {
-      vector<Mat> yellow_labeling;
-      vector<Mat> yellow_stats;
-      for (const auto &img_yellow : yellow_imgs) {
-        // cout << "Processing yellow image of size: " << img_yellow.size() << endl;
-        local_num_figures = 0;
-        Mat img_label, img_stats, img_centroids;
-        int num_labels = connectedComponentsWithStats(
-            img_yellow, img_label, img_stats, img_centroids, 8, CV_32S);
-        Mat valid_stats;
-        for (int l = 1; l < num_labels; ++l) {
-          int area = img_stats.at<int>(l, cv::CC_STAT_AREA);
-          int width = img_stats.at<int>(l, cv::CC_STAT_WIDTH);
-          int height = img_stats.at<int>(l, cv::CC_STAT_HEIGHT);
-          if (height <= 0) continue;
-          double aspect_ratio = static_cast<double>(width) / height;
-          if (area >= YELLOW_PIX_TH &&
-              aspect_ratio >= MIN_ASPECT_RATIO_YELLOW &&
-              aspect_ratio <= MAX_ASPECT_RATIO_YELLOW) {
-            // cout << "Yellow signal candidate found: Area=" << area
-            //      << ", Aspect Ratio=" << aspect_ratio << endl;
-            valid_stats.push_back(img_stats.row(l));
-            local_num_figures++;
-          }
-        }
-        if (valid_stats.rows > 0) {
-          yellow_labeling.push_back(img_label);
-          yellow_stats.push_back(valid_stats.clone());
-        } else {
-          // 条件を満たさない場合は空でも push しておく
-          yellow_labeling.push_back(Mat());
-          yellow_stats.push_back(Mat());
-        }
-        // このブロックで見つかった矩形を全体カウンタに加算
-        num_figures += local_num_figures;
-      }
-      signal_labeling.push_back(yellow_labeling);
-      signal_stats.push_back(yellow_stats);
-    }
-    imgs_yellow_labeling.push_back(signal_labeling);
-    imgs_yellow_stats.push_back(signal_stats);
-  }
+    std::string &signal_state,
+    bool is_red
+) {
+    imgs_yellow_labeling.clear();
+    imgs_yellow_stats.clear();
+    imgs_stats_valid.clear();
+    num_figures = 0;
 
-  // 最終判定は累積された num_figures を使用
-  if (num_figures >= 1 && is_red) {
-    signal_state = "RedLight";
-  } else if (num_figures >= 1 && !is_red) {
-    signal_state = "GreenLight";
-  }
+    for (size_t i = 0; i < imgs_ex_yellow.size(); ++i) {
+        const auto &signal_imgs_yellow = imgs_ex_yellow[i];
+        const auto &orig_stats_group = imgs_original_stats[i];
+
+        std::vector<cv::Mat> valid_stats_group;
+        std::vector<std::vector<cv::Mat>> yellow_labeling_group;
+        std::vector<std::vector<cv::Mat>> yellow_stats_group;
+
+        for (size_t j = 0; j < signal_imgs_yellow.size(); ++j) {
+            const auto &yellow_imgs = signal_imgs_yellow[j];
+
+            std::vector<cv::Mat> yellow_labeling_subgroup;
+            std::vector<cv::Mat> yellow_stats_subgroup;
+
+            for (size_t k = 0; k < yellow_imgs.size(); ++k) {
+                const cv::Mat &img_yellow = yellow_imgs[k];
+                int local_num_figures = 0;
+
+                cv::Mat img_label, img_stats, img_centroids;
+                int num_labels = connectedComponentsWithStats(
+                    img_yellow, img_label, img_stats, img_centroids, 8, CV_32S);
+
+                cv::Mat valid_stats;
+                for (int l = 1; l < num_labels; ++l) {
+                    int area = img_stats.at<int>(l, cv::CC_STAT_AREA);
+                    int width = img_stats.at<int>(l, cv::CC_STAT_WIDTH);
+                    int height = img_stats.at<int>(l, cv::CC_STAT_HEIGHT);
+                    if (height <= 0) continue;
+                    double aspect_ratio = static_cast<double>(width) / height;
+                    if (area >= YELLOW_PIX_TH &&
+                        aspect_ratio >= MIN_ASPECT_RATIO_YELLOW &&
+                        aspect_ratio <= MAX_ASPECT_RATIO_YELLOW) {
+
+                        valid_stats.push_back(img_stats.row(l));
+                        local_num_figures++;
+
+                        // 元の赤/緑矩形を valid 配列に追加
+                        if (k < orig_stats_group.size()) {
+                            valid_stats_group.push_back(orig_stats_group[k]);
+                        }
+                    }
+                }
+
+                if (valid_stats.rows > 0) {
+                    yellow_labeling_subgroup.push_back(img_label);
+                    yellow_stats_subgroup.push_back(valid_stats.clone());
+                }
+                num_figures += local_num_figures;
+            }
+            yellow_labeling_group.push_back(yellow_labeling_subgroup);
+            yellow_stats_group.push_back(yellow_stats_subgroup);
+        }
+
+        imgs_yellow_labeling.push_back(yellow_labeling_group);
+        imgs_yellow_stats.push_back(yellow_stats_group);
+        imgs_stats_valid.push_back(valid_stats_group);
+    }
+
+    // 信号判定
+    if (num_figures >= 1) {
+        signal_state = is_red ? "RedLight" : "GreenLight";
+    }
 }
+
 
 void SignalReco::drawRects(const vector<vector<Mat>> &imgs_stats, int num_figures, vector<Mat> &signal_imgs, bool is_red)
 {
@@ -867,14 +850,34 @@ void SignalReco::loop_main()
   imgs_green_ex_yellow_labeling.clear(); /* 黄色の人型にラベリング処理を適用するための変数を初期化 */
   imgs_red_ex_yellow_stats.clear(); /* 黄色の人型の統計情報を格納するための変数を初期化 */
   imgs_green_ex_yellow_stats.clear(); /* 黄色の人型の統計情報を格納するための変数を初期化 */
+  std::vector<std::vector<cv::Mat>> imgs_red_stats_valid;
+  std::vector<std::vector<cv::Mat>> imgs_green_stats_valid;
   extractYellow(signal_imgs, imgs_red_stats, imgs_red_ex_yellow); /* 候補領域の中から黄色の人形を抽出 */
   extractYellow(signal_imgs, imgs_green_stats, imgs_green_ex_yellow); /* 候補領域の中から黄色の人形を抽出 */
   num_figures_red = 0, num_figures_green = 0;
   signal_state = "";
-  labelingYellow(imgs_red_ex_yellow, imgs_red_ex_yellow_labeling, imgs_red_ex_yellow_stats, num_figures_red, signal_state, true); /* 黄色の人型にラベリング処理を適用　赤信号を判定 */
-  labelingYellow(imgs_green_ex_yellow, imgs_green_ex_yellow_labeling, imgs_green_ex_yellow_stats, num_figures_green, signal_state, false); /* 黄色の人型にラベリング処理を適用 青信号を判定 */
-  drawRects(imgs_red_stats, num_figures_red, signal_imgs, true); /* signal_imgsに赤の矩形を描画 */
-  drawRects(imgs_green_stats, num_figures_green, signal_imgs, false); /* signal_imgsに緑の矩形を描画 */
+  labelingYellow(
+    imgs_red_ex_yellow,      // 黄色抽出後画像
+    imgs_red_stats,          // 元の赤矩形 stats
+    imgs_red_stats_valid,    // 黄色条件を満たした赤矩形
+    imgs_red_ex_yellow_labeling,
+    imgs_red_ex_yellow_stats,
+    num_figures_red,
+    signal_state,
+    true                     // 赤信号
+);
+  labelingYellow(
+    imgs_green_ex_yellow,      // 黄色抽出後画像
+    imgs_green_stats,          // 元の緑矩形 stats
+    imgs_green_stats_valid,    // 黄色条件を満たした緑矩形
+    imgs_green_ex_yellow_labeling,
+    imgs_green_ex_yellow_stats,
+    num_figures_green,
+    signal_state,
+    false                     // 青信号
+);
+  drawRects(imgs_red_stats_valid, num_figures_red, signal_imgs, true); /* signal_imgsに赤の矩形を描画 */
+  drawRects(imgs_green_stats_valid, num_figures_green, signal_imgs, false); /* signal_imgsに緑の矩形を描画 */
   drawResult(camera_img, signal_state); /* 信号の状態をカメラ画像に描画 */
 } /* loop_main() */
 
