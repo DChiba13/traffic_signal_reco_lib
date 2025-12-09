@@ -451,7 +451,7 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
 
       // === 5. 最後まで0なら警告 ===
       if (range == 0.0f) {
-        std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
+        // std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
         continue;
       }
 
@@ -710,67 +710,69 @@ void SignalReco::extractYellow(vector<Mat> &imgs, vector<vector<Mat>> &stats, ve
 }
 
 void SignalReco::labelingYellow(
-    const vector<vector<vector<Mat>>> &imgs_ex_yellow,
-    vector<vector<vector<Mat>>> &imgs_yellow_labeling,
-    vector<vector<vector<Mat>>> &imgs_yellow_stats,
+    const std::vector<std::vector<std::vector<cv::Mat>>> &imgs_ex_yellow, 
+    const std::vector<std::vector<cv::Mat>> &imgs_original_stats,
+    std::vector<std::vector<cv::Mat>> &imgs_stats_valid,
+    std::vector<std::vector<std::vector<cv::Mat>>> &imgs_yellow_labeling,
+    std::vector<std::vector<std::vector<cv::Mat>>> &imgs_yellow_stats,
     int &num_figures,
-    string &signal_state,
-    bool is_red)
-{
-  imgs_yellow_labeling.clear();
-  imgs_yellow_stats.clear();
-  int local_num_figures;
-  for (const auto &signal_imgs_yellow : imgs_ex_yellow) {
-    vector<vector<Mat>> signal_labeling;
-    vector<vector<Mat>> signal_stats;
-    for (const auto &yellow_imgs : signal_imgs_yellow) {
-      vector<Mat> yellow_labeling;
-      vector<Mat> yellow_stats;
-      for (const auto &img_yellow : yellow_imgs) {
-        // cout << "Processing yellow image of size: " << img_yellow.size() << endl;
-        local_num_figures = 0;
-        Mat img_label, img_stats, img_centroids;
-        int num_labels = connectedComponentsWithStats(
+    std::string &signal_state,
+    bool is_red
+) {
+    imgs_yellow_labeling.clear();
+    imgs_yellow_stats.clear();
+    imgs_stats_valid.clear();
+    num_figures = 0;
+    for (size_t i = 0; i < imgs_ex_yellow.size(); ++i) {
+      const auto &signal_imgs_yellow = imgs_ex_yellow[i];
+      const auto &orig_stats_group = imgs_original_stats[i];
+      std::vector<cv::Mat> valid_stats_group;
+      std::vector<std::vector<cv::Mat>> yellow_labeling_group;
+      std::vector<std::vector<cv::Mat>> yellow_stats_group;
+      for (size_t j = 0; j < signal_imgs_yellow.size(); ++j) {
+        const auto &yellow_imgs = signal_imgs_yellow[j];
+        std::vector<cv::Mat> yellow_labeling_subgroup;
+        std::vector<cv::Mat> yellow_stats_subgroup;
+        for (size_t k = 0; k < yellow_imgs.size(); ++k) {
+          const cv::Mat &img_yellow = yellow_imgs[k];
+          int local_num_figures = 0;
+          cv::Mat img_label, img_stats, img_centroids;
+          int num_labels = connectedComponentsWithStats(
             img_yellow, img_label, img_stats, img_centroids, 8, CV_32S);
-        Mat valid_stats;
-        for (int l = 1; l < num_labels; ++l) {
-          int area = img_stats.at<int>(l, cv::CC_STAT_AREA);
-          int width = img_stats.at<int>(l, cv::CC_STAT_WIDTH);
-          int height = img_stats.at<int>(l, cv::CC_STAT_HEIGHT);
-          if (height <= 0) continue;
-          double aspect_ratio = static_cast<double>(width) / height;
-          if (area >= YELLOW_PIX_TH &&
+          cv::Mat valid_stats;
+          for (int l = 1; l < num_labels; ++l) {
+            int area = img_stats.at<int>(l, cv::CC_STAT_AREA);
+            int width = img_stats.at<int>(l, cv::CC_STAT_WIDTH);
+            int height = img_stats.at<int>(l, cv::CC_STAT_HEIGHT);
+            if (height <= 0) continue;
+            double aspect_ratio = static_cast<double>(width) / height;
+            if (area >= YELLOW_PIX_TH &&
               aspect_ratio >= MIN_ASPECT_RATIO_YELLOW &&
               aspect_ratio <= MAX_ASPECT_RATIO_YELLOW) {
-            // cout << "Yellow signal candidate found: Area=" << area
-            //      << ", Aspect Ratio=" << aspect_ratio << endl;
-            valid_stats.push_back(img_stats.row(l));
-            local_num_figures++;
+              valid_stats.push_back(img_stats.row(l));
+              local_num_figures++;
+              // 元の赤/緑矩形を valid 配列に追加
+              if (k < orig_stats_group.size()) {
+                valid_stats_group.push_back(orig_stats_group[k]);
+              }
+            }
           }
+          if (valid_stats.rows > 0) {
+            yellow_labeling_subgroup.push_back(img_label);
+            yellow_stats_subgroup.push_back(valid_stats.clone());
+          }
+          num_figures += local_num_figures;
         }
-        if (valid_stats.rows > 0) {
-          yellow_labeling.push_back(img_label);
-          yellow_stats.push_back(valid_stats.clone());
-        } else {
-          // 条件を満たさない場合は空でも push しておく
-          yellow_labeling.push_back(Mat());
-          yellow_stats.push_back(Mat());
-        }
-        // このブロックで見つかった矩形を全体カウンタに加算
-        num_figures += local_num_figures;
-      }
-      signal_labeling.push_back(yellow_labeling);
-      signal_stats.push_back(yellow_stats);
+      yellow_labeling_group.push_back(yellow_labeling_subgroup);
+      yellow_stats_group.push_back(yellow_stats_subgroup);
     }
-    imgs_yellow_labeling.push_back(signal_labeling);
-    imgs_yellow_stats.push_back(signal_stats);
+    imgs_yellow_labeling.push_back(yellow_labeling_group);
+    imgs_yellow_stats.push_back(yellow_stats_group);
+    imgs_stats_valid.push_back(valid_stats_group);
   }
-
-  // 最終判定は累積された num_figures を使用
-  if (num_figures >= 1 && is_red) {
-    signal_state = "RedLight";
-  } else if (num_figures >= 1 && !is_red) {
-    signal_state = "GreenLight";
+  /* 信号判定 */
+  if (num_figures >= 1) {
+      signal_state = is_red ? "RedLight" : "GreenLight";
   }
 }
 
@@ -834,11 +836,11 @@ void SignalReco::loop_main()
   remap(src_camera_img, camera_img, map_x, map_y, INTER_LINEAR);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
   projectToImage(points, lidar_img, true); /* 反射強度画像、距離画像の作成 */
-  // projectToImageForView(points, lidar_img_fov); /* 反射強度画像、距離画像の作成（画像確認用）*/
+  projectToImageForView(points, lidar_img_fov); /* 反射強度画像、距離画像の作成（画像確認用）*/
   drawObjectsReflect(lidar_img, lidar_img_ref); /* 反射強度画像の描画 */
-  // drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); /* 反射強度画像の描画（画像確認用）*/
+  drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); /* 反射強度画像の描画（画像確認用）*/
   drawObjectsRange(lidar_img, lidar_img_range); /* 距離画像の描画 */
-  // drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); /* 距離画像の描画（画像確認用）*/
+  drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); /* 距離画像の描画（画像確認用）*/
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  /* 反射強度画像の矩形領域を検出 */
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); /* 矩形領域の座標系を正規スクリーン座標系に変換 */
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); /* 正規スクリーン座標系をロボット座標系に変換 */
@@ -867,14 +869,16 @@ void SignalReco::loop_main()
   imgs_green_ex_yellow_labeling.clear(); /* 黄色の人型にラベリング処理を適用するための変数を初期化 */
   imgs_red_ex_yellow_stats.clear(); /* 黄色の人型の統計情報を格納するための変数を初期化 */
   imgs_green_ex_yellow_stats.clear(); /* 黄色の人型の統計情報を格納するための変数を初期化 */
+  std::vector<std::vector<cv::Mat>> imgs_red_stats_valid;
+  std::vector<std::vector<cv::Mat>> imgs_green_stats_valid;
   extractYellow(signal_imgs, imgs_red_stats, imgs_red_ex_yellow); /* 候補領域の中から黄色の人形を抽出 */
   extractYellow(signal_imgs, imgs_green_stats, imgs_green_ex_yellow); /* 候補領域の中から黄色の人形を抽出 */
   num_figures_red = 0, num_figures_green = 0;
   signal_state = "";
-  labelingYellow(imgs_red_ex_yellow, imgs_red_ex_yellow_labeling, imgs_red_ex_yellow_stats, num_figures_red, signal_state, true); /* 黄色の人型にラベリング処理を適用　赤信号を判定 */
-  labelingYellow(imgs_green_ex_yellow, imgs_green_ex_yellow_labeling, imgs_green_ex_yellow_stats, num_figures_green, signal_state, false); /* 黄色の人型にラベリング処理を適用 青信号を判定 */
-  drawRects(imgs_red_stats, num_figures_red, signal_imgs, true); /* signal_imgsに赤の矩形を描画 */
-  drawRects(imgs_green_stats, num_figures_green, signal_imgs, false); /* signal_imgsに緑の矩形を描画 */
+  labelingYellow(imgs_red_ex_yellow, imgs_red_stats, imgs_red_stats_valid, imgs_red_ex_yellow_labeling, imgs_red_ex_yellow_stats, num_figures_red, signal_state,true); /* 赤信号を判定 */
+  labelingYellow(imgs_green_ex_yellow, imgs_green_stats, imgs_green_stats_valid, imgs_green_ex_yellow_labeling, imgs_green_ex_yellow_stats, num_figures_green, signal_state,false); /* 青信号を判定 */
+  drawRects(imgs_red_stats_valid, num_figures_red, signal_imgs, true); /* signal_imgsに赤の矩形を描画 */
+  drawRects(imgs_green_stats_valid, num_figures_green, signal_imgs, false); /* signal_imgsに緑の矩形を描画 */
   drawResult(camera_img, signal_state); /* 信号の状態をカメラ画像に描画 */
 } /* loop_main() */
 
