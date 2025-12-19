@@ -854,15 +854,6 @@ void SignalReco::loop_main()
   drawObjectsRange(lidar_img, lidar_img_range); /* 距離画像の描画 */
   drawObjectsRangeForView(lidar_img_fov, lidar_img_range_fov); /* 距離画像の描画（画像確認用）*/
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  /* 反射強度画像の矩形領域を検出 */
-  // sign_rects_refimg_screenの値を表示
-  cout << "sign_rects_refimg_screen" << endl;
-  for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
-    cout << "Sign " << i + 1 << ": ";
-    for (int j = 0; j < sign_rects_refimg_screen[i].size(); j++) {
-      cout << "(" << sign_rects_refimg_screen[i][j].x << ", " << sign_rects_refimg_screen[i][j].y << ") ";
-    }
-    cout << endl;
-  }
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); /* 矩形領域の座標系を正規スクリーン座標系に変換 */
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); /* 正規スクリーン座標系をロボット座標系に変換 */
   correctStretched3DPoints(src_sign_rect_points_robot, src_sign_rect_points_robot_corrected);
