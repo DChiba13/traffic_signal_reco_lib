@@ -81,13 +81,13 @@ int main() {
         auto start = std::chrono::high_resolution_clock::now();
         signal.loop_main();
         auto end = std::chrono::high_resolution_clock::now();
-        long duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        double duration = std::chrono::duration<double, std::milli>(end - start).count();
 
         std::string img_name = png_path.filename().string();
 
         /*** CSV書き込み（Correct固定） ***/
         csv << img_name << ","
-            << duration << ","
+            << std::fixed << std::setprecision(1) << duration << ","
             << signal.signal_state << ","
             << "Correct"
             << "\n";
