@@ -67,11 +67,14 @@ double LIDAR_HEIGHT; // LiDARの取り付け高さ
 double REFLECT_THRESH; // 反射強度の閾値
 double MIN_RANGE; // 投影する距離の最小値
 double MAX_RANGE; // 投影する距離の最大値
+float range_;
 double MAX_REFLECT; // 投影する反射強度の最大値
 int MIN_PIX_NUM_SIGN; // 標識と判定するピクセル数の最小
 int MAX_PIX_NUM_SIGN; // 標識と判定するピクセル数の最大
 double MIN_ASPECT_RATIO_SIGN; // 標識と判定するアスペクト比の最小
 double MAX_ASPECT_RATIO_SIGN; // 標識と判定するアスペクト比の最大
+
+constexpr float RANGE_REF_ = 11.6f; /* LiDARから標識までの距離の基準値(m) */
 
 /*** HSVの閾値 ***/
 int MIN_H_RED_01;
@@ -100,12 +103,16 @@ int MAX_V_YELLOW;
 /*** 信号の候補領域のピクセル数の閾値 ***/
 int MIN_PIX_NUM;
 int MAX_PIX_NUM;
+int min_pix_num_;
+int max_pix_num_;
+
 /*** 信号の候補領域のアスペクト比の閾値 ***/
 /* 横 : 縦 = ASPECT_RATIO : 1 */
 double MIN_ASPECT_RATIO;
 double MAX_ASPECT_RATIO;
 /*** 候補領域内の黄色画素ピクセル数の閾値 ***/
 int YELLOW_PIX_TH;
+int yellow_pix_th_;
 double MIN_ASPECT_RATIO_YELLOW;
 double MAX_ASPECT_RATIO_YELLOW;
 /*** 信号認識領域の標識の矩形による倍率 ***/
@@ -133,7 +140,7 @@ public:
     void drawObjectsRangeForView(const Mat &lidar_data, Mat &img);
     void rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_bin, vector<vector<cv::Point2i>> &sign_rects);
     void screen2CenteredCoords(cv::Size image_size, const vector<vector<cv::Point2i>> &sign_rect_refimg_screen, vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen);
-    void centeredScreen2RobotCoords(const Mat &lidar_img, const vector<vector<cv::Point2i>> &sign_rects_refimg_screen, const vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen, vector<vector<cv::Point3f>> &sign_rect_points_robot);
+    float centeredScreen2RobotCoords(const Mat &lidar_img, const vector<vector<cv::Point2i>> &sign_rects_refimg_screen, const vector<vector<cv::Point2i>> &sign_rect_refimg_centered_screen, vector<vector<cv::Point3f>> &sign_rect_points_robot);
     void correctStretched3DPoints(const vector<vector<Point3f>>& src_points, vector<vector<Point3f>>& dst_points);
     void rotateRectPoints(const std::vector<std::vector<cv::Point3f>> &src, float roll, float pitch, float yaw, std::vector<std::vector<cv::Point3f>> &dst);
     void perspectiveProjectionModel(const vector<vector<cv::Point3f>> &sign_rect_points_camera, vector<vector<cv::Point2i>> &sign_rects_perspective);
