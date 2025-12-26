@@ -5,8 +5,8 @@ namespace signal_reco {
 /*** コンストラクタ ***/
 SignalReco::SignalReco()
 {
-  initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
-  // initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
+  // initParam("/home/revast/workspace/ryusei/traffic_signal_reco_lib/cfg/parameter.ini");
+  initParam("/home/chiba/workspace/cxx_ws/signal_reco/traffic_signal_reco_lib/cfg/parameter.ini");
   initImgPcdName(IMG_PCD_PATH);
 }
 /*** デストラクタ ***/
@@ -24,10 +24,10 @@ void SignalReco::initImgPcdName(const string &path)
   }
   std::string line;
   while (std::getline(ifs, line)) {
-    // 空行や';'で始まる行はスキップ
+    /* 空行や';'で始まる行はスキップ */
     if (line.empty() || line[0] == ';') continue;
     std::istringstream iss(line);
-    // 文字列が格納されていることを確認
+    /* 文字列が格納されていることを確認 */
     if (!(iss >> img_path >> pcd_path >> cam_yaml_path)) {
       std::cerr << "Invalid line format: " << line << std::endl;
       continue;
@@ -165,9 +165,9 @@ void SignalReco::rotatePoints(const vector<LidarData> &src, float roll, float pi
   }
 }
 
-void SignalReco::projectToImage(const vector<LidarData> &points, Mat &lidar_img, bool is_for_reco)
+void SignalReco::projectToImage(const vector<LidarData> &points, Mat &lidar_img)
 {
-  /*** 視野角を解像度で割ると幅と高さのピクセル数が求まる ***/
+  /*** 解像度[px] = 視野角[deg] / 分解能[deg/px] ***/
   int width = cvRound(LIDAR_VIEW_ANGLE_H / LIDAR_RESOLUTION_H);
   int height = cvRound(LIDAR_VIEW_ANGLE_V / LIDAR_RESOLUTION_V);
   lidar_img = Mat(height, width, CV_32FC2, Scalar(.0, .0));
@@ -177,7 +177,7 @@ void SignalReco::projectToImage(const vector<LidarData> &points, Mat &lidar_img,
   for(int i = 0; i < sz; i++)
   {
     if(points[i].z < DETECT_HEIGHT_MIN) continue;
-    double angle_h = atan2(points[i].y, points[i].x); 
+    double angle_h = atan2(points[i].y, points[i].x);
     double angle_v = atan2(points[i].z - LIDAR_HEIGHT, sqrt(points[i].x * points[i].x + points[i].y * points[i].y));
     /*** 求めた角度が画像のどこの画素に対応するか求める ***/
     int x = cvRound(width / 2 - angle_h / LIDAR_RESOLUTION_H);
@@ -186,15 +186,13 @@ void SignalReco::projectToImage(const vector<LidarData> &points, Mat &lidar_img,
     if(x < 0 || y < 0 || x >= width || y >= height) continue;
     lidar_img.at<Vec2f>(y, x) = Vec2f(points[i].reflectivity, points[i].range);
   }
-  if(!is_for_reco) {
-    height = cvRound(Deg2Rad(height) / LIDAR_RESOLUTION_H);
-    resize(lidar_img, lidar_img, Size(width, height), 0, 0, INTER_NEAREST);
-  }
+  height = cvRound(Deg2Rad(height) / LIDAR_RESOLUTION_H);
+  resize(lidar_img, lidar_img, Size(width, height), 0, 0, INTER_NEAREST);
 }
 
 void SignalReco::projectToImageForView(const vector<LidarData> &points, Mat &lidar_img)
 {
-  /*** 視野角を解像度で割ると幅と高さのピクセル数が求まる ***/
+  /*** 解像度[px] = 視野角[deg] / 分解能[deg/px] ***/
   int width = cvRound(LIDAR_VIEW_ANGLE_H / LIDAR_RESOLUTION_H);
   int height = cvRound(LIDAR_VIEW_ANGLE_V / LIDAR_RESOLUTION_V);
   lidar_img = Mat(height, width, CV_32FC2, Scalar(.0, .0));
@@ -204,7 +202,7 @@ void SignalReco::projectToImageForView(const vector<LidarData> &points, Mat &lid
   for(int i = 0; i < sz; i++)
   {
     if(points[i].z < 0.3) continue;
-    double angle_h = atan2(points[i].y, points[i].x); 
+    double angle_h = atan2(points[i].y, points[i].x);
     double angle_v = atan2(points[i].z - LIDAR_HEIGHT, sqrt(points[i].x * points[i].x + points[i].y * points[i].y));
     /*** 求めた角度が画像のどこの画素に対応するか求める ***/
     int x = cvRound(width / 2 - angle_h / LIDAR_RESOLUTION_H);
@@ -230,9 +228,9 @@ void SignalReco::drawObjectsReflect(const Mat &lidar_data, Mat &img)
     for(int x = 0; x < img.cols; x++){
       float reflect = lidar_img.at<Vec2f>(y, x)[0];
       float range = lidar_img.at<Vec2f>(y, x)[1];
-      if(reflect > MAX_REFLECT || reflect <= .0f) continue; // 必須
-      if(range > MAX_RANGE || range <= MIN_RANGE) continue; // 必須
-      if(reflect < REFLECT_THRESH) continue; // 閾値処理
+      if(reflect > MAX_REFLECT || reflect <= .0f) continue; /* 必須 */
+      if(range > MAX_RANGE || range <= MIN_RANGE) continue; /* 必須 */
+      if(reflect < REFLECT_THRESH) continue; /* 閾値処理 */
       int val = (int)remap(reflect, 0.0f, (float)MAX_REFLECT, 30.0f, 255.0f);
       img.at<Vec3b>(y, x) = Vec3b(val, val, val);
     }
@@ -304,12 +302,12 @@ void SignalReco::rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_b
   } else {
       gray = lidar_img_ref;
   }
-  // 二値化
+  /* 二値化 */
   cv::threshold(gray, lidar_img_ref_bin, 0, 255, cv::THRESH_BINARY);
-  // ラベリング処理を適用
+  /* ラベリング処理を適用 */
   cv::Mat labels, stats, centroids;
   int num_labels = cv::connectedComponentsWithStats(lidar_img_ref_bin, labels, stats, centroids, 8, CV_32S);
-  // 矩形情報をsign_rectsに格納
+  /* 矩形情報をsign_rectsに格納 */
   for (int i = 1; i < num_labels; i++) {
     int x = stats.at<int>(i, cv::CC_STAT_LEFT);
     int y = stats.at<int>(i, cv::CC_STAT_TOP);
@@ -319,19 +317,19 @@ void SignalReco::rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_b
     if (area < MIN_PIX_NUM_SIGN || area > MAX_PIX_NUM_SIGN) continue;
     double aspect_ratio = static_cast<double>(w) / static_cast<double>(h);
     if (aspect_ratio < MIN_ASPECT_RATIO_SIGN || aspect_ratio > MAX_ASPECT_RATIO_SIGN) continue;
-    // 矩形の4点を計算
+    /* 矩形の4点を計算 */
     std::vector<cv::Point2i> rect_points;
-    rect_points.push_back(cv::Point2i(x, y));             // 左上
-    rect_points.push_back(cv::Point2i(x, y + h));         // 左下
-    rect_points.push_back(cv::Point2i(x + w, y + h));     // 右下
-    rect_points.push_back(cv::Point2i(x + w, y));         // 右上
-    // sign_rectsに矩形情報を格納
+    rect_points.push_back(cv::Point2i(x, y));             /* 左上 */
+    rect_points.push_back(cv::Point2i(x, y + h));         /* 左下 */
+    rect_points.push_back(cv::Point2i(x + w, y + h));     /* 右下 */
+    rect_points.push_back(cv::Point2i(x + w, y));         /* 右上 */
+    /* sign_rectsに矩形情報を格納 */
     sign_rects_refimg_screen.push_back(rect_points);
   }
-  // 矩形を描画
-  // for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
-  //   cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
-  // }
+  /** 矩形を描画 **/
+  for (int i = 0; i < sign_rects_refimg_screen.size(); i++) {
+    cv::rectangle(lidar_img_ref, sign_rects_refimg_screen[i][0], sign_rects_refimg_screen[i][2], cv::Scalar(0, 255, 255), 1);
+  }
 }
 
 void SignalReco::screen2CenteredCoords(cv::Size image_size, const vector<vector<cv::Point2i>> &sign_rect_refimg_screen, vector<vector<cv::Point2i>> &sign_rects_refimg_centered_screen)
@@ -357,7 +355,6 @@ void SignalReco::screen2CenteredCoords(cv::Size image_size, const vector<vector<
 void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std::vector<std::vector<cv::Point2i>> &rects, const std::vector<std::vector<cv::Point2i>> &s, std::vector<std::vector<cv::Point3f>> &r)
 {
   r.clear();
-
   if (lidar_img.empty()) {
     std::cerr << "Error: lidar_img is empty." << std::endl;
     return;
@@ -366,30 +363,25 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
     std::cerr << "Error: lidar_img must be of type CV_32FC2." << std::endl;
     return;
   }
-
   auto getRangeSafe = [&](int y, int x) -> float {
     if (y < 0 || y >= lidar_img.rows || x < 0 || x >= lidar_img.cols)
       return 0.0f;
     return lidar_img.at<cv::Vec2f>(y, x)[1];
   };
-
   r.resize(s.size());
   for (int i = 0; i < s.size(); i++) {
     r[i].resize(s[i].size());
     for (int j = 0; j < s[i].size(); j++) {
-
       if (i >= rects.size() || j >= rects[i].size()) {
         std::cerr << "Index out of bounds: i=" << i << ", j=" << j << std::endl;
         continue;
       }
-
       const auto &pt = rects[i][j];
       if (pt.x < 0 || pt.x >= lidar_img.cols || pt.y < 0 || pt.y >= lidar_img.rows) {
         std::cerr << "Error: Index out of bounds: x=" << pt.x << ", y=" << pt.y << std::endl;
         continue;
       }
-
-      // === 1. 通常位置 ===
+      /* 1. 通常位置 */
       float range = 0.0f;
       switch (j) {
         case 0: range = getRangeSafe(pt.y + 1, pt.x + 1); break;
@@ -400,8 +392,7 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
           std::cerr << "Error: j is out of range" << std::endl;
           continue;
       }
-
-      // === 2. 他の角を試す ===
+      /* 2. 他の角を試す */
       if (range == 0.0f) {
         for (int k = 0; k < 4; ++k) {
           if (k == j || k >= rects[i].size()) continue;
@@ -412,8 +403,7 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
           }
         }
       }
-
-      // === 3. 矩形中心を試す ===
+      /* 3. 矩形中心を試す */
       if (range == 0.0f) {
         int cx = 0, cy = 0;
         for (int k = 0; k < 4 && k < rects[i].size(); ++k) {
@@ -424,38 +414,41 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
         cy /= std::min(4, static_cast<int>(rects[i].size()));
         range = getRangeSafe(cy, cx);
       }
-
-      // === 4. 矩形内を探索（±3ピクセル範囲） ===
+      /* 4. 矩形内をラスタスキャン（最初に見つかった点を使用) */
       if (range == 0.0f) {
-        int cx = 0, cy = 0;
+        int min_x = lidar_img.cols - 1;
+        int max_x = 0;
+        int min_y = lidar_img.rows - 1;
+        int max_y = 0;
+        /* 矩形の bounding box を計算 */
         for (int k = 0; k < 4 && k < rects[i].size(); ++k) {
-          cx += rects[i][k].x;
-          cy += rects[i][k].y;
+          min_x = std::min(min_x, rects[i][k].x);
+          max_x = std::max(max_x, rects[i][k].x);
+          min_y = std::min(min_y, rects[i][k].y);
+          max_y = std::max(max_y, rects[i][k].y);
         }
-        cx /= std::min(4, static_cast<int>(rects[i].size()));
-        cy /= std::min(4, static_cast<int>(rects[i].size()));
-
-        const int search_radius = 3;
-        float found = 0.0f;
-        for (int dy = -search_radius; dy <= search_radius && found == 0.0f; ++dy) {
-          for (int dx = -search_radius; dx <= search_radius; ++dx) {
-            float tmp = getRangeSafe(cy + dy, cx + dx);
+        /* 画像範囲にクリップ */
+        min_x = std::max(0, min_x);
+        min_y = std::max(0, min_y);
+        max_x = std::min(lidar_img.cols - 1, max_x);
+        max_y = std::min(lidar_img.rows - 1, max_y);
+        /* ラスタスキャン（上→下、左→右）*/
+        for (int y = min_y; y <= max_y && range == 0.0f; ++y) {
+          for (int x = min_x; x <= max_x; ++x) {
+            float tmp = getRangeSafe(y, x);
             if (tmp > 0.0f) {
-              found = tmp;
+              range = tmp;
               break;
             }
           }
         }
-        range = found;
       }
-
-      // === 5. 最後まで0なら警告 ===
+      /* 5. 最後まで0なら警告 */
       if (range == 0.0f) {
         // std::cerr << "Warning: No valid range found in region i=" << i << ", j=" << j << std::endl;
         continue;
       }
-
-      // === 6. ロボット座標変換 ===
+      /* 6. ロボット座標変換 */
       float angle_h = s[i][j].y * LIDAR_RESOLUTION_H;
       float angle_v = s[i][j].x * LIDAR_RESOLUTION_V;
       r[i][j].x = range * std::cos(angle_v) * std::cos(angle_h);
@@ -465,15 +458,36 @@ void SignalReco::centeredScreen2RobotCoords(const cv::Mat &lidar_img, const std:
   }
 }
 
+void SignalReco::correctStretched3DPoints(const vector<vector<Point3f>>& src, vector<vector<Point3f>>& dst)
+{
+  dst.clear();
+  double v_scale = LIDAR_RESOLUTION_V / LIDAR_RESOLUTION_H;
+  for (const auto& rect : src) {
+    vector<Point3f> rect_corrected;
+    for (const auto& p : rect) {
+      double r = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+      double theta_h = atan2(p.y, p.x);
+      double theta_v_wrong = atan2(p.z, sqrt(p.x*p.x + p.y*p.y));
+      double theta_v = theta_v_wrong / v_scale;
+      Point3f pc;
+      pc.x = r * cos(theta_v) * cos(theta_h);
+      pc.y = r * cos(theta_v) * sin(theta_h);
+      pc.z = r * sin(theta_v);
+      rect_corrected.push_back(pc);
+    }
+    dst.push_back(rect_corrected);
+  }
+}
+
 void SignalReco::rotateRectPoints(const std::vector<std::vector<cv::Point3f>> &src, float roll, float pitch, float yaw, std::vector<std::vector<cv::Point3f>> &dst)
 {
   float qw, qx, qy, qz;
   euler2Quaternion(roll, pitch, yaw, qw, qx, qy, qz);
   qz = -qz;
   std::vector<float> r{
-    (qw*qw) + (qx*qx) - (qy*qy) - (qz*qz),  2*(qw*qz + qx*qy),           2*(qx*qz - qw*qy),
-    2*(qx*qy - qw*qz),                     (qw*qw) - (qx*qx) + (qy*qy) - (qz*qz), 2*(qy*qz + qw*qx),
-    2*(qw*qy + qx*qz),                     2*(-qw*qx + qy*qz),           (qw*qw) - (qx*qx) - (qy*qy) + (qz*qz)
+    (qw*qw) + (qx*qx) - (qy*qy) - (qz*qz),  2*(qw*qz + qx*qy),                     2*(qx*qz - qw*qy),
+    2*(qx*qy - qw*qz),                      (qw*qw) - (qx*qx) + (qy*qy) - (qz*qz), 2*(qy*qz + qw*qx),
+    2*(qw*qy + qx*qz),                      2*(-qw*qx + qy*qz),                    (qw*qw) - (qx*qx) - (qy*qy) + (qz*qz)
   };
   dst.resize(src.size());
   for (size_t i = 0; i < src.size(); i++){
@@ -491,7 +505,6 @@ void SignalReco::rotateRectPoints(const std::vector<std::vector<cv::Point3f>> &s
     }
   }
 }
-
 
 void SignalReco::perspectiveProjectionModel(const vector<vector<cv::Point3f>> &sign_rect_points_robot, vector<vector<cv::Point2i>> &sign_rects_perspective)
 {
@@ -529,7 +542,6 @@ void SignalReco::centeredScreen2ScreenCoords(cv::Size image_size, vector<vector<
 
 void SignalReco::drawSignOnCameraImg(const Mat &camera_img, const vector<vector<cv::Point2i>> &sign_rects)
 {
-  // 矩形を描画
   for (int i = 0; i < sign_rects.size(); i++) {
     cv::rectangle(camera_img, sign_rects[i][0], sign_rects[i][2], cv::Scalar(255, 0, 210), 2);
   }
@@ -647,11 +659,11 @@ void SignalReco::labeling(const vector<Mat> &src, vector<Mat> &dst, vector<vecto
 
     vector<Mat> label_stats;
     for (int i = 1; i < num_labels; i++) {
-      // ラベルの面積が最小値と最大値の範囲内であるか確認
+      /* ラベルの面積が最小値と最大値の範囲内であるか確認 */
       if (img_stats.at<int>(i, cv::CC_STAT_AREA) < MIN_PIX_NUM || img_stats.at<int>(i, cv::CC_STAT_AREA) > MAX_PIX_NUM) {
         continue;
       }
-      // アスペクト比の計算
+      /* アスペクト比の計算 */
       double aspect_ratio = static_cast<double>(img_stats.at<int>(i, cv::CC_STAT_WIDTH)) / img_stats.at<int>(i, cv::CC_STAT_HEIGHT);
       if (aspect_ratio < MIN_ASPECT_RATIO || aspect_ratio > MAX_ASPECT_RATIO) {
         continue;
@@ -751,7 +763,7 @@ void SignalReco::labelingYellow(
               aspect_ratio <= MAX_ASPECT_RATIO_YELLOW) {
               valid_stats.push_back(img_stats.row(l));
               local_num_figures++;
-              // 元の赤/緑矩形を valid 配列に追加
+              /* 元の赤/緑矩形を valid 配列に追加 */
               if (k < orig_stats_group.size()) {
                 valid_stats_group.push_back(orig_stats_group[k]);
               }
@@ -772,7 +784,7 @@ void SignalReco::labelingYellow(
   }
   /* 信号判定 */
   if (num_figures >= 1) {
-      signal_state = is_red ? "RedLight" : "GreenLight";
+    signal_state = is_red ? "RedLight" : "GreenLight";
   }
 }
 
@@ -797,8 +809,8 @@ void SignalReco::drawRects(const vector<vector<Mat>> &imgs_stats, int num_figure
 
 void SignalReco::drawResult(Mat &camera_img, const string &signal_state)
 {
-  // 信号の状態を正方形でカメラ画像に描画
-  int square_size = 50; // 正方形のサイズ
+  /* 信号の状態を正方形でカメラ画像に描画 */
+  int square_size = 50; /* 正方形のサイズ */
   if (signal_state == "RedLight") {
     rectangle(camera_img, Point(10, 10), Point(10 + square_size, 10 + square_size), Scalar(0, 0, 255), -1); // 赤色
     // putText(camera_img, "Red Light", Point(10 + square_size + 10, 10 + square_size / 2 + 12), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 0, 255), 2);
@@ -835,7 +847,7 @@ void SignalReco::loop_main()
   /*** 変換処理、カメラ画像の歪み補正 ***/
   remap(src_camera_img, camera_img, map_x, map_y, INTER_LINEAR);
   /*** 歩行者用信号機の横に付随する交通標識の検出 **********************************************************/
-  projectToImage(points, lidar_img, true); /* 反射強度画像、距離画像の作成 */
+  projectToImage(points, lidar_img); /* 反射強度画像、距離画像の作成 */
   projectToImageForView(points, lidar_img_fov); /* 反射強度画像、距離画像の作成（画像確認用）*/
   drawObjectsReflect(lidar_img, lidar_img_ref); /* 反射強度画像の描画 */
   drawObjectsReflectForView(lidar_img_fov, lidar_img_ref_fov); /* 反射強度画像の描画（画像確認用）*/
@@ -844,7 +856,8 @@ void SignalReco::loop_main()
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  /* 反射強度画像の矩形領域を検出 */
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); /* 矩形領域の座標系を正規スクリーン座標系に変換 */
   centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); /* 正規スクリーン座標系をロボット座標系に変換 */
-  rotateRectPoints(src_sign_rect_points_robot, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), sign_rect_points_robot); /* ロボット座標系を回転 */
+  correctStretched3DPoints(src_sign_rect_points_robot, src_sign_rect_points_robot_corrected);
+  rotateRectPoints(src_sign_rect_points_robot_corrected, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), sign_rect_points_robot); /* ロボット座標系を回転 */
   perspectiveProjectionModel(sign_rect_points_robot, sign_rects_camimg_perspective); /* 透視投影モデルを適用 */
   centeredScreen2ScreenCoords(camera_img.size(), sign_rects_camimg_perspective, sign_rects); /* 正規スクリーン座標系をスクリーン座標系に変換 */
   // drawSignOnCameraImg(camera_img, sign_rects); /* カメラ画像に標識の矩形を描画 */
