@@ -297,12 +297,6 @@ void SignalReco::rectangleReflect(const Mat &lidar_img_ref, Mat &lidar_img_ref_b
 {
   sign_rects_refimg_screen.clear();
   cv::Mat gray;
-  // float scale = RANGE_REF_ / range_;
-  // scale = clamp(scale, 0.0f, 3.0f);
-  // min_pix_num_sign_ = static_cast<int>(MIN_PIX_NUM_SIGN * scale);
-  // max_pix_num_sign_ = static_cast<int>(MAX_PIX_NUM_SIGN * scale);
-  // cout << "MIN_PIX_NUM_SIGN: " << MIN_PIX_NUM_SIGN << ", MAX_PIX_NUM_SIGN: " << MAX_PIX_NUM_SIGN << endl;
-  // cout << "min_pix_num_sign_: " << min_pix_num_sign_ << ", max_pix_num_sign_: " << max_pix_num_sign_ << endl;
   if (lidar_img_ref.channels() == 3) {
       cv::cvtColor(lidar_img_ref, gray, cv::COLOR_BGR2GRAY);
   } else {
@@ -779,7 +773,6 @@ void SignalReco::labelingYellow(
     float scale = RANGE_REF_ / range_;
     scale = clamp(scale, 0.0f, 3.0f);
     yellow_pix_th_ = static_cast<int>(YELLOW_PIX_TH * scale);
-    cout << "yellow_pix_th_: " << yellow_pix_th_ << endl;
     for (size_t i = 0; i < imgs_ex_yellow.size(); ++i) {
       const auto &signal_imgs_yellow = imgs_ex_yellow[i];
       const auto &orig_stats_group = imgs_original_stats[i];
@@ -801,7 +794,6 @@ void SignalReco::labelingYellow(
             int width = img_stats.at<int>(l, cv::CC_STAT_WIDTH);
             int height = img_stats.at<int>(l, cv::CC_STAT_HEIGHT);
             int area = width * height;
-            cout << "area : " << area << endl;
             if (height <= 0) continue;
             double aspect_ratio = static_cast<double>(width) / height;
             if (area >= YELLOW_PIX_TH &&
@@ -903,7 +895,6 @@ void SignalReco::loop_main()
   rectangleReflect(lidar_img_ref, lidar_img_ref_bin, sign_rects_refimg_screen);  /* 反射強度画像の矩形領域を検出 */
   screen2CenteredCoords(lidar_img.size(), sign_rects_refimg_screen, sign_rects_refimg_centered_screen); /* 矩形領域の座標系を正規スクリーン座標系に変換 */
   range_ = centeredScreen2RobotCoords(lidar_img, sign_rects_refimg_screen, sign_rects_refimg_centered_screen, src_sign_rect_points_robot); /* 正規スクリーン座標系をロボット座標系に変換 */
-  cout << "range_ :" << range_ << " m" << endl;
   correctStretched3DPoints(src_sign_rect_points_robot, src_sign_rect_points_robot_corrected);
   rotateRectPoints(src_sign_rect_points_robot_corrected, Deg2Rad(ROLL), Deg2Rad(PITCH), Deg2Rad(YAW), sign_rect_points_robot); /* ロボット座標系を回転 */
   perspectiveProjectionModel(sign_rect_points_robot, sign_rects_camimg_perspective); /* 透視投影モデルを適用 */
